@@ -1,0 +1,89 @@
+generated: '2026-08-05'
+method: searched
+source: openapi/0g-labs-router-openapi.yml
+source_detail: >-
+  The changelog is published INSIDE the OpenAPI document, as a "## Changelog" section of
+  info.description at https://0gfoundation.github.io/0g-router/openapi.yaml. There is no
+  standalone dated changelog page — https://docs.0g.ai/changelog returns 404 — so the spec
+  itself is the release-notes surface. That is an unusual but legitimate placement: the notes
+  travel with the contract they describe.
+scheme:
+  published_rule: >-
+    "### Unreleased lists API changes merged but not yet live on mainnet; on release each is cut
+    into a dated ### vX.Y — YYYY-MM section. Endpoint and field stability is marked inline with
+    [beta]."
+  version_format: vX.Y
+  date_format: YYYY-MM
+  stability_marker: '[beta]'
+current_version: '1.0'
+dated_releases_published: false
+dated_releases_note: >-
+  As observed on 2026-08-05 the Changelog carries only the ### Unreleased block — no dated
+  ### vX.Y — YYYY-MM section has been cut yet.
+entries:
+- version: Unreleased
+  date: null
+  items:
+  - endpoints: [POST /v1/messages]
+    kind: breaking
+    summary: >-
+      A model that does not speak the Anthropic wire format now returns 400, not 503. SDKs treat
+      5xx as retryable, so a Messages-only client used to burn its whole retry budget on a
+      permanently unsatisfiable request and then report it as an outage. Callers branching on
+      status codes must add a 400 arm. Check supported_formats on GET /v1/models up front.
+  - endpoints: [POST /v1/chat/completions, POST /v1/messages, /v1/images/*, POST /v1/audio/transcriptions]
+    kind: breaking
+    summary: >-
+      The ZG-Res-Key response header now carries the PROVIDER's response id verbatim instead of
+      a router-generated value, so a client can independently verify the provider's TEE
+      signature. It is now present only when the provider returns one. X-Request-ID remains the
+      Router's own always-present identifier.
+  - endpoints: [POST /v1/videos, GET /v1/models]
+    kind: documentation
+    summary: >-
+      Documented that `size` names a resolution TIER (not output dimensions) and that `seconds`
+      is silently clamped to the model's range in both directions. No behaviour change.
+  - endpoints: ['GET /v1/videos/{id}', 'GET /v1/async/jobs/{id}']
+    kind: fix
+    summary: >-
+      x_0g_trace.billing on a re-poll now reports the amount CHARGED rather than a fresh quote.
+      Previously the reported cost drifted for USD-priced providers as the FX rate moved. The
+      ledger, usage history and balance were always correct.
+  - endpoints: ['POST /v1/videos', 'GET /v1/videos/{id}', 'GET /v1/videos/{id}/content']
+    kind: addition
+    summary: Async video generation — submit, poll, fetch content.
+  - endpoints: [GET /v1/account/usage/history]
+    kind: change
+    summary: >-
+      request_id value format differs for video usage rows (async-<16 hex>-<job id> vs
+      async-<8 chars of provider address>-<job id>). Read provider_address off the row instead
+      of parsing the middle segment. [beta]
+  - endpoints: [GET /v1/models, GET /v1/providers, GET /v1/service-types]
+    kind: addition
+    summary: 'pricing.video and pricing.variants added; new service type: video-generation.'
+  - endpoints: [all inference endpoints]
+    kind: breaking
+    summary: The min_cost admission floor rises from 0.00001 0G to 0.01 0G.
+  - endpoints: [POST /v1/chat/completions, POST /v1/messages, /v1/images/*, POST /v1/audio/transcriptions, /v1/async/images/*, POST /v1/routing/preview]
+    kind: change
+    summary: Provider pinning behaviour under a price ceiling.
+  - endpoints: [GET /v1/account, POST /v1/account/onboarded]
+    kind: addition
+    summary: >-
+      Account onboarding state. GET returns {address, created_at, onboarded_at}; POST records
+      that the flow was handled and is idempotent, so client retries and dismiss-after-complete
+      are both safe. Server-side per wallet, so it survives a cleared cache or another device.
+      JWT-authenticated; GET also accepts a management key with account:read. [beta]
+  - endpoints: [POST /v1/chat/completions, POST /v1/messages, /v1/images/*, POST /v1/audio/transcriptions, /v1/async/images/*]
+    kind: change
+    summary: A transient vault-check failure now returns a different status than before.
+  - endpoints: [all]
+    kind: change
+    summary: A client-supplied X-Request-ID is now validated before it is echoed and recorded.
+other_change_surfaces:
+- name: Router docs deprecation notices
+  url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/routing
+  detail: The deprecated JSON body `provider` routing object is called out inline in the docs.
+- name: GitHub releases
+  url: https://github.com/0gfoundation
+  detail: Node, SDK and client releases are cut per-repo on GitHub, not aggregated into one changelog.

@@ -1,0 +1,119 @@
+generated: '2026-08-05'
+method: searched
+source: https://docs.0g.ai/developer-hub/testnet/testnet-overview
+summary: >-
+  0G's sandbox is a full public testnet, not a mocked test mode. "Galileo" is a separate chain
+  (ID 16602) with its own RPC, its own storage indexer, its own explorer, its own Router
+  deployment and a faucet that dispenses real testnet 0G. Test and live are separated by
+  NETWORK, not by a key prefix — there is no sk_test_/sk_live_ style distinction on the Router,
+  so an account and its API keys belong to whichever deployment issued them.
+separation_model:
+  kind: separate-network
+  key_prefix_separation: false
+  detail: >-
+    Router key prefixes (sk-, mk-) encode PURPOSE, not environment. Environment is chosen by
+    base_url and by which console you signed into.
+environments:
+- name: Mainnet (Aristotle)
+  chain_id: 16661
+  token_symbol: 0G
+  rpc: https://evmrpc.0g.ai
+  router_console: https://pc.0g.ai
+  router_api: https://router-api.0g.ai/v1
+  storage_indexer: https://indexer-storage-turbo.0g.ai
+  block_explorer: https://chainscan.0g.ai
+  storage_explorer: https://storagescan.0g.ai
+  ecosystem_explorer: https://explorer.0g.ai/mainnet/home
+  storage_start_block: 2387557
+  funds: real
+- name: Testnet (Galileo)
+  chain_id: 16602
+  token_symbol: 0G
+  rpc: https://evmrpc-testnet.0g.ai
+  rpc_note: development only — the docs direct production traffic to third-party RPC providers
+  router_console: https://pc.testnet.0g.ai
+  router_api: https://router-api-testnet.integratenetwork.work/v1
+  storage_indexer: https://indexer-storage-testnet-turbo.0g.ai
+  block_explorer: https://chainscan-galileo.0g.ai
+  storage_explorer: https://storagescan-galileo.0g.ai
+  ecosystem_explorer: https://explorer.0g.ai/testnet/home
+  storage_start_block: 1
+  da_start_block: 940000
+  funds: testnet tokens from the faucet
+faucets:
+- url: https://faucet.0g.ai
+  network: Galileo testnet
+  amount: 0.1 0G
+  period: per day
+- url: https://cloud.google.com/application/web3/faucet/0g/galileo
+  network: Galileo testnet
+  operator: Google Cloud
+  note: third-party faucet listed in the 0G docs
+test_contracts:
+  network: Galileo testnet
+  note: >-
+    Published verbatim in the 0G docs. These are testnet addresses — recorded so a fixture can
+    be wired without guessing, never as mainnet values.
+  addresses:
+  - name: Flow
+    address: '0x22E03a6A89B950F1c82ec5e74F8eCa321a105296'
+    purpose: Storage data flow management
+  - name: Mine
+    address: '0x00A9E9604b0538e06b268Fb297Df333337f9593b'
+    purpose: Storage mining rewards
+  - name: Reward
+    address: '0xA97B57b4BdFEA2D0a25e535bd849ad4e6C440A69'
+    purpose: Reward distribution
+  - name: DAEntrance
+    address: '0xE75A073dA5bb7b0eC622170Fd268f35E675a957B'
+    purpose: DA blob submission
+  - name: DASigners
+    address: '0x0000000000000000000000000000000000001000'
+    purpose: DA signer management (precompile — same address on both networks)
+  - name: WrappedOGBase
+    address: '0x0000000000000000000000000000000000001001'
+    purpose: Wrapped native token (precompile — same address on both networks)
+  - name: Compute Ledger
+    address: '0xE70830508dAc0A97e6c087c75f402f9Be669E406'
+    purpose: Compute network payment ledger
+  - name: Compute Inference
+    address: '0xa79F4c8311FF93C06b8CfB403690cc987c93F91E'
+    purpose: Compute inference service
+  - name: Compute FineTuning
+    address: '0xaC66eBd174435c04F1449BBa08157a707B6fa7b1'
+    purpose: Compute fine-tuning service
+anonymous_exploration:
+  note: >-
+    Three Router endpoints answer with no credential at all, so the model catalog, live pricing,
+    provider health and service types can be explored before signing up or depositing anything.
+    Verified 200 on 2026-08-05.
+  endpoints:
+  - url: https://router-api.0g.ai/v1/models
+    status: 200
+  - url: https://router-api.0g.ai/v1/providers
+    status: 200
+  - url: https://router-api.0g.ai/v1/service-types
+    status: 200
+dry_run_tooling:
+- name: routing preview
+  endpoint: POST /v1/routing/preview
+  detail: >-
+    Resolve which provider a given request and set of X-0G-Provider-* headers would select,
+    without running (and paying for) the inference.
+- name: verify_tee
+  detail: >-
+    Opt-in synchronous TEE signature verification, reported as tee_verified in x_0g_trace — the
+    way to assert in a test that the model you asked for is the model that ran.
+- name: 0g-storage-client gen
+  detail: CLI subcommand that generates test files for storage upload/download exercises.
+- name: storage web tool
+  url: https://storagescan-galileo.0g.ai/tool
+  detail: Browser upload/download against testnet storage for one-off checks.
+test_clocks: false
+test_values_note: >-
+  0G publishes no magic test identifiers (no test card numbers, no reserved phone numbers, no
+  hosted test tokens). The equivalent affordance is the faucet plus a separate chain, so test
+  runs use real-shaped values on a throwaway network.
+credentials_note: >-
+  Every value above is a public network parameter or a published testnet contract address. No
+  key, secret, or private key is recorded here; the CLI --key flag takes the operator's own.

@@ -1,0 +1,114 @@
+generated: '2026-08-05'
+method: searched
+source: https://docs.0g.ai/developer-hub/building-on-0g/storage/storage-cli
+clis:
+- name: 0g-storage-client
+  purpose: >-
+    Command-line gateway to the 0G Storage network — upload and download files and directories,
+    read and write KV streams, and run gateway/indexer services locally.
+  language: Go
+  repository: https://github.com/0gfoundation/0g-storage-client
+  docs: https://docs.0g.ai/developer-hub/building-on-0g/storage/storage-cli
+  package: github.com/0gfoundation/0g-storage-client
+  install:
+  - method: build from source
+    prerequisites: [Go 1.18 or higher, git]
+    steps:
+    - git clone https://github.com/0gfoundation/0g-storage-client.git
+    - cd 0g-storage-client
+    - go build
+    - mv 0g-storage-client ~/go/bin
+  invocation: 0g-storage-client [command] [flags]
+  commands:
+  - group: files
+    commands:
+    - name: upload
+      description: Upload a file to the 0G Storage network
+      required_flags: ['--url (chain RPC)', '--key (private key)', '--file']
+      exclusive_flags: exactly one of --indexer or --node
+      common_flags: [--tags, --submitter, --expected-replica, --skip-tx, --finality-required, --task-size, --fast-mode, --fragment-size, --routines, --fee, --nonce, --max-gas-price, --n-retries, --step, --method, --full-trusted, --timeout, --flow-address, --market-address]
+    - name: download
+      description: Download a file from the 0G Storage network
+      required_flags: ['--file (output path)']
+      exclusive_flags:
+      - exactly one of --indexer or --node
+      - exactly one of --root or --roots
+    - name: upload-dir
+      description: Upload a directory to the 0G Storage network
+    - name: download-dir
+      description: Download a directory from the 0G Storage network
+    - name: diff-dir
+      description: Diff a local directory against the network
+    - name: gen
+      description: Generate test files
+  - group: kv
+    commands:
+    - name: kv-write
+      description: Write to KV streams
+    - name: kv-read
+      description: Read KV streams
+  - group: services
+    commands:
+    - name: gateway
+      description: Start the REST gateway service
+    - name: indexer
+      description: Start an indexer service
+    - name: deploy
+      description: Deploy storage contracts
+  - group: shell
+    commands:
+    - name: completion
+      description: Generate shell completion scripts
+    - name: help
+      description: Get help for any command
+  global_flags:
+  - name: --gas-limit
+    type: uint
+    description: Custom gas limit to send transaction
+  - name: --gas-price
+    type: uint
+    description: Custom gas price to send transaction
+  - name: --log-level
+    type: string
+    default: info
+  - name: --log-color-disabled
+    description: Force-disable colorful logs
+  - name: --rpc-retry-count
+    type: int
+    default: 5
+  - name: --rpc-retry-interval
+    type: duration
+    default: 5s
+  - name: --rpc-timeout
+    type: duration
+    default: 30s
+  - name: --web3-log-enabled
+    description: Enable Web3 RPC logging
+  key_flows:
+  - name: upload a file to mainnet storage
+    example: >-
+      0g-storage-client upload --url https://evmrpc.0g.ai --key <private_key>
+      --indexer https://indexer-storage-turbo.0g.ai --file <file_path>
+  - name: download by root hash
+    example: >-
+      0g-storage-client download --indexer https://indexer-storage-turbo.0g.ai
+      --root <file_root_hash> --file <output_file_path>
+  web_alternative: https://storagescan-galileo.0g.ai/tool
+- name: 0g-compute-cli
+  purpose: >-
+    Broker CLI shipped with the 0G Compute TypeScript SDK, used for the Direct path —
+    account/sub-account funding and the fine-tuning task lifecycle.
+  language: TypeScript
+  package: '@0gfoundation/0g-compute-ts-sdk'
+  install:
+  - method: npm/pnpm global
+    command: pnpm install @0gfoundation/0g-compute-ts-sdk -g
+  docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/fine-tuning
+  note: >-
+    Documented as the tool used to prepare datasets, configure training, monitor tasks and
+    deploy LoRA adapters. The full command surface is not enumerated on a single docs page;
+    only the install path and the flows above are recorded here rather than guessed at.
+not_a_cli:
+  note: >-
+    The Router API needs no 0G CLI — it is called over plain HTTP with an sk- bearer key, and
+    any OpenAI-compatible CLI works against it by changing base_url.

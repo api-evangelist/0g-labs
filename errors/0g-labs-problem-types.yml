@@ -1,0 +1,150 @@
+generated: '2026-08-05'
+method: searched
+source: openapi/0g-labs-router-openapi.yml
+docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/errors
+format: openai-error-envelope
+rfc9457: false
+note: >-
+  0G does NOT use RFC 9457 application/problem+json. Errors follow the OpenAI-compatible
+  envelope, which is the right call for a gateway whose whole value proposition is that an
+  OpenAI client works unchanged. error.type buckets the failure; error.code identifies the
+  specific cause; request_id appears at the top level when available.
+envelope:
+  content_type: application/json
+  schema: github_com_0glabs_0g-router_pkg_response.ErrorResponse
+  example:
+    error:
+      message: Insufficient balance to process request
+      type: payment_error
+      code: insufficient_balance
+    request_id: req_abc123
+status_codes:
+- status: 400
+  meaning: Bad request — invalid model, malformed body, unsupported feature for model
+  retryable: false
+  operations_declaring: 13
+- status: 401
+  meaning: Missing or invalid authentication
+  retryable: false
+  operations_declaring: 17
+- status: 402
+  meaning: Insufficient balance — deposit more 0G
+  retryable: false
+  operations_declaring: 8
+- status: 403
+  meaning: The credential does not have permission to perform this action
+  retryable: false
+  operations_declaring: 2
+- status: 404
+  meaning: Resource not found (unknown model, unknown api key, unknown job)
+  retryable: false
+  operations_declaring: 11
+- status: 409
+  meaning: Conflict
+  retryable: false
+  operations_declaring: 2
+- status: 410
+  meaning: Gone — the async artifact has expired
+  retryable: false
+  operations_declaring: 1
+- status: 423
+  meaning: Locked
+  retryable: false
+  operations_declaring: 8
+- status: 424
+  meaning: Failed dependency
+  retryable: false
+  operations_declaring: 1
+- status: 429
+  meaning: Rate limited — honor the Retry-After header
+  retryable: true
+  operations_declaring: 7
+- status: 500
+  meaning: Internal error
+  retryable: conditional
+  operations_declaring: 12
+- status: 501
+  meaning: Not implemented
+  retryable: false
+  operations_declaring: 1
+- status: 502
+  meaning: Provider returned an error (failover exhausted)
+  retryable: conditional
+  operations_declaring: 4
+- status: 503
+  meaning: No healthy providers available for the requested model
+  retryable: conditional
+  operations_declaring: 9
+problems:
+- type: invalid_request_error
+  statuses: [400, 401]
+  codes:
+  - code: invalid_body
+    title: Request body is malformed or fails validation
+  - code: missing_authorization
+    title: No Authorization header was sent
+  - code: invalid_api_key
+    title: The supplied key is not recognized
+  - code: api_key_revoked
+    title: The key was revoked; in-flight requests fail on their next call
+  - code: invalid_provider_header
+    title: A X-0G-Provider-* header value is malformed
+  - code: invalid_max_price_usd
+    title: A price ceiling header value is not a valid decimal
+  - code: no_provider_within_max_price
+    title: No provider serves this model at or below the price ceiling
+  - code: pinned_provider_exceeds_max_price
+    title: The pinned provider address costs more than the ceiling allows
+  remediation: Fix the request, header, or credential. Do not retry unchanged.
+- type: payment_error
+  statuses: [402]
+  codes:
+  - code: insufficient_balance
+    title: Not enough 0G deposited to cover the request
+  remediation: >-
+    Deposit to the 0G Payment Layer vault at pc.0g.ai. Note the admission floor — the min_cost
+    check rises from 0.00001 0G to 0.01 0G.
+  docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/account/deposits
+- type: permission_error
+  statuses: [403]
+  codes:
+  - code: access_denied
+    title: The credential is not allowed to perform this action
+  - code: insufficient_scope
+    title: The management key lacks the required scope for this endpoint
+  remediation: >-
+    Check the permission matrix in authentication/0g-labs-authentication.yml — sk- keys cannot
+    read /v1/account/*, mk- keys cannot run inference, and no key can touch
+    /v1/management-keys/*.
+- type: not_found_error
+  statuses: [404]
+  codes:
+  - code: api_key_not_found
+    title: No API key with that id exists on this account
+  remediation: Do not retry unchanged.
+- type: rate_limit_error
+  statuses: [429]
+  codes:
+  - code: rate_limit_exceeded
+    title: Per-account request limit exceeded
+  remediation: Honor the Retry-After header (seconds), then retry. Do not retry in a tight loop.
+  docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/rate-limits
+- type: server_error
+  statuses: [500, 502, 503]
+  codes:
+  - code: no_available_provider
+    title: Every provider for this model is unhealthy
+    remediation: >-
+      Unlikely to resolve in seconds. Choose a different model or wait — the Router will NOT
+      fall back to a different model on your behalf.
+  - code: provider_error
+    title: The provider returned an error and failover was exhausted
+    remediation: >-
+      The Router already tried every healthy provider. Retrying may help only if one just came
+      back online.
+  - code: internal_error
+    title: Router-side failure
+retry_policy:
+  retryable: [429, 502, 503]
+  never_retry_unchanged: [400, 401, 402, 403]
+  honor_header: Retry-After

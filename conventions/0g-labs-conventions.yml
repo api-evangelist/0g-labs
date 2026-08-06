@@ -1,0 +1,167 @@
+generated: '2026-08-05'
+method: searched
+source: openapi/0g-labs-router-openapi.yml
+docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+scope: >-
+  0G Compute Router API (https://router-api.0g.ai/v1). The 0G Chain JSON-RPC endpoint follows
+  the standard Ethereum JSON-RPC conventions and is not described here.
+
+wire_compatibility:
+  base_shape: OpenAI
+  also_supported: Anthropic Messages (POST /v1/messages)
+  claim: >-
+    "Any tool that speaks the OpenAI API works with 0G Router — change base_url and api_key,
+    nothing else." Vendor clients (openai-python, openai-node, anthropic, LangChain, LlamaIndex,
+    Vercel AI SDK) work unmodified against https://router-api.0g.ai/v1.
+  divergences:
+  - field: size (POST /v1/videos)
+    detail: >-
+      Names a resolution TIER, not output dimensions. Pixel dimensions (1280x720) select the
+      aspect ratio only, and only for text-to-video; on image-to-video they have no effect.
+      Read valid tiers from pricing.variants[].dimensions.resolution on GET /v1/models.
+  - field: seconds (POST /v1/videos)
+    detail: Silently clamped to the model's supported range in both directions; neither bound errors.
+  - endpoint: POST /v1/messages
+    detail: >-
+      A model that only serves the OpenAI format returns 400 invalid_request_error naming the
+      supported formats (previously 503). Check supported_formats on GET /v1/models first.
+
+authentication:
+  style: bearer token in the Authorization header, two prefixed credential classes
+  detail: see authentication/0g-labs-authentication.yml
+  inference_key_prefix: sk-
+  management_key_prefix: mk-
+  anonymous_endpoints: [GET /v1/models, GET /v1/providers, GET /v1/service-types]
+
+idempotency:
+  supported: true
+  scope: partial
+  mechanisms:
+  - kind: request-body field
+    field: idempotency_key
+    required: true
+    surface: >-
+      Project credit distribution (DistributeProjectCreditRequest). The key is echoed back on
+      the distribution response object, so a retry can be reconciled against the original.
+    example_value_shape: "user-42-onboarding"
+    source: openapi/0g-labs-router-openapi.yml
+  - kind: idempotent endpoint
+    endpoint: POST /v1/account/onboarded
+    detail: >-
+      The first call stamps onboarded_at with the server time; later calls (a client retry, or a
+      "dismiss" after a "complete") leave it unchanged. Safe to call and retry from both client
+      paths. Marked [beta].
+    source: openapi/0g-labs-router-openapi.yml (info.description Changelog)
+  - kind: upstream idempotency reference
+    detail: >-
+      Fiat credit rows carry the Stripe PaymentIntent id (pi_…) as the stable, idempotency-keyed
+      reference to quote in support tickets.
+  not_supported_on: >-
+    There is NO Idempotency-Key request header on the inference endpoints
+    (/v1/chat/completions, /v1/messages, /v1/images/*, /v1/audio/transcriptions, /v1/videos).
+    Safe retry on those surfaces is governed by the retry rules in errors/, not by an
+    idempotency key — an inference retry is a new billable request.
+
+request_tracing:
+  request_id_header: X-Request-ID
+  direction: bidirectional
+  detail: >-
+    Echoed on every response and recorded in usage history — the Router's stable, always-present
+    per-response identifier. A client-supplied X-Request-ID is validated before it is echoed and
+    recorded. Errors also surface request_id at the top level of the error envelope; quote it
+    when reporting issues.
+  provider_response_header: ZG-Res-Key
+  provider_response_note: >-
+    Carries the PROVIDER's own response id, passed through verbatim, so a client can
+    independently verify the provider's TEE signature against the provider's signature endpoint.
+    Present only when the provider returns one — treat absence as "no provider response id",
+    not an error.
+  response_trace_block: x_0g_trace
+  response_trace_note: >-
+    Present on every Router response. Carries billing (input_cost / output_cost / total_cost,
+    currency on USD traces) and, when verify_tee was requested, tee_verified.
+
+pagination:
+  style: offset
+  params:
+  - name: limit
+    in: query
+  - name: offset
+    in: query
+  - name: cursor
+    in: query
+    note: present on some collection endpoints
+  response_fields:
+  - object: "list"
+  - data: array of items
+  - total: integer (total matching rows)
+  example: GET /v1/account/usage/history?limit=20&offset=0
+  filters_on_usage_history: [api_key_id, source, start_date, end_date]
+
+rate_limiting:
+  signaling: response headers on every inference response, OpenAI-compatible
+  headers:
+  - X-RateLimit-Limit-Requests
+  - X-RateLimit-Remaining-Requests
+  - X-RateLimit-Reset-Requests
+  retry_signal: Retry-After (seconds) on 429
+  detail: see rate-limits/0g-labs-rate-limits.yml
+
+routing_control:
+  surface: X-0G-Provider-* request headers (canonical)
+  deprecated_surface: >-
+    JSON body `provider: {…}` object — works today for back-compat, will be phased out. Only
+    available on JSON endpoints; multipart endpoints have no body routing surface.
+  precedence: headers win field-by-field when both are set
+  headers:
+  - name: X-0G-Provider-Sort
+    values: [latency, price]
+  - name: X-0G-Provider-Max-Price-Usd-Prompt
+    detail: drops providers above the ceiling before sorting and failover
+  - name: X-0G-Provider-Max-Price-Usd-Completion
+  - name: X-0G-Provider-Address
+    detail: pin a specific on-chain provider address
+  default_behavior: >-
+    Round-robin across healthy providers with automatic failover to the next healthy provider on
+    error; 503 if every provider failed. The Router never falls back to a different model.
+  preview_endpoint: POST /v1/routing/preview
+
+verifiable_execution:
+  extension_field: verify_tee
+  in: JSON request body, or query parameter on multipart endpoints
+  detail: >-
+    Opt-in. The Router verifies the provider's TEE signature synchronously before returning, and
+    reports the result as tee_verified inside x_0g_trace. verify_tee is a 0G extension and is
+    stripped from the request before forwarding, so it does not break OpenAI schema validation.
+
+error_envelope:
+  format: OpenAI-compatible (NOT RFC 9457 application/problem+json)
+  shape:
+    error:
+      message: string
+      type: string
+      code: string
+    request_id: string (top level, when available)
+  detail: see errors/0g-labs-problem-types.yml
+
+versioning:
+  scheme: uri-path
+  current: v1
+  detail: see lifecycle/0g-labs-lifecycle.yml
+
+data_retention:
+  prompts_stored: false
+  detail: >-
+    The Router persists only billing metadata (token counts, model, provider, timestamp).
+    Request and response bodies are not stored. Callers needing content audit logs must log
+    them themselves. A privacy mode can enforce sealed (TeeML-only) inference per API key or
+    per request.
+  source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/privacy
+
+cross_links:
+  authentication: authentication/0g-labs-authentication.yml
+  errors: errors/0g-labs-problem-types.yml
+  rate_limits: rate-limits/0g-labs-rate-limits.yml
+  lifecycle: lifecycle/0g-labs-lifecycle.yml
+  data_model: data-model/0g-labs-data-model.yml
+  sandbox: sandbox/0g-labs-sandbox.yml

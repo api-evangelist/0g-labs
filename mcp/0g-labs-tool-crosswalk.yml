@@ -1,0 +1,245 @@
+generated: '2026-08-05'
+method: derived
+source: mcp/0g-labs-mcp.yml + openapi/0g-labs-router-openapi.yml
+status: candidate
+note: >-
+  0G publishes no MCP server, so this is NOT a divergence map between a live tool list and a
+  REST spec — it is the binding between the candidate tool set in mcp/0g-labs-mcp.yml and the
+  operations that back it. Every row is 1:1 and high confidence because the tools were derived
+  from the operations, not observed independently. The genuinely interesting column here is
+  the last one: the operations that have no agent-facing tool, and the agent surface 0G ships
+  INSTEAD of MCP.
+surfaces:
+  openapi:
+    file: openapi/0g-labs-router-openapi.yml
+    source: https://0gfoundation.github.io/0g-router/openapi.yaml
+    operations: 23
+    gated: false
+    operation_ids_declared: 0
+    operation_ids_note: >-
+      The spec declares no operationIds, so `rest:` below quotes the proposed ids from
+      overlays/0g-labs-router-overlay.yaml alongside the method+path that identifies the
+      operation unambiguously in the source document.
+  graphql:
+    endpoint: null
+    note: >-
+      0G exposes no GraphQL of its own. Goldsky subgraphs offer GraphQL over indexed 0G Chain
+      data, but those are Goldsky-operated, not a 0G API surface.
+  mcp:
+    url: null
+    gated: false
+    note: no first-party MCP server; tools/list probes returned 404 or unresolvable host.
+  agent_skills:
+    repository: https://github.com/0gfoundation/0g-agent-skills
+    files: 14 SKILL.md + AGENTS.md orchestration guide
+    note: >-
+      This is 0G's real agent surface, and it does NOT bind to the Router OpenAPI. The skills
+      are SDK- and chain-oriented (ZgFile uploads, merkle proofs, contract deploys, wallet-signed
+      Direct inference), so they teach an agent to write code against the Go/TS SDKs rather than
+      to call REST operations. That mismatch is the finding, not a gap to paper over.
+crosswalk:
+- tool: list_models
+  category: catalog
+  rest: [listModels]
+  operation: GET /models
+  binding: rest
+  confidence: high
+  auth: none
+- tool: list_providers
+  category: catalog
+  rest: [listProviders]
+  operation: GET /providers
+  binding: rest
+  confidence: high
+  auth: none
+- tool: list_service_types
+  category: catalog
+  rest: [listServiceTypes]
+  operation: GET /service-types
+  binding: rest
+  confidence: high
+  auth: none
+- tool: preview_routing
+  category: routing
+  rest: [previewRouting]
+  operation: POST /routing/preview
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: create_chat_completion
+  category: inference
+  rest: [createChatCompletion]
+  operation: POST /chat/completions
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: create_anthropic_message
+  category: inference
+  rest: [createAnthropicMessage]
+  operation: POST /messages
+  binding: rest
+  confidence: high
+  auth: sk-
+  note: >-
+    Only reachable for models whose supported_formats include the Anthropic format; others
+    return 400 naming the formats they serve.
+- tool: transcribe_audio
+  category: inference
+  rest: [createAudioTranscription]
+  operation: POST /audio/transcriptions
+  binding: rest
+  confidence: high
+  auth: sk-
+  note: multipart/form-data — verify_tee must be passed as a query parameter, not a body field.
+- tool: generate_image
+  category: inference
+  rest: [createImageGeneration]
+  operation: POST /images/generations
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: edit_image
+  category: inference
+  rest: [createImageEdit]
+  operation: POST /images/edits
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: submit_async_image_generation
+  category: inference-async
+  rest: [submitAsyncImageGeneration]
+  operation: POST /async/images/generations
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: submit_async_image_edit
+  category: inference-async
+  rest: [submitAsyncImageEdit]
+  operation: POST /async/images/edits
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: submit_video_generation
+  category: inference-async
+  rest: [submitVideoGeneration]
+  operation: POST /videos
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: get_video_job
+  category: inference-async
+  rest: [getVideoJob]
+  operation: GET /videos/{id}
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: download_video_content
+  category: inference-async
+  rest: [downloadVideoContent]
+  operation: GET /videos/{id}/content
+  binding: rest
+  confidence: high
+  auth: sk-
+- tool: get_account
+  category: account
+  rest: [getAccount]
+  operation: GET /account
+  binding: rest
+  confidence: high
+  auth: mk- (account:read)
+- tool: get_account_funds
+  category: account
+  rest: [getAccountFunds]
+  operation: GET /account/funds
+  binding: rest
+  confidence: high
+  auth: mk- (account:read)
+- tool: get_usage_history
+  category: account
+  rest: [getUsageHistory]
+  operation: GET /account/usage/history
+  binding: rest
+  confidence: high
+  auth: mk- (account:read)
+- tool: get_usage_stats
+  category: account
+  rest: [getUsageStats]
+  operation: GET /account/usage/stats
+  binding: rest
+  confidence: high
+  auth: mk- (account:read)
+- tool: get_daily_usage
+  category: account
+  rest: [getDailyUsage]
+  operation: GET /account/usage/daily
+  binding: rest
+  confidence: high
+  auth: mk- (account:read)
+- tool: list_api_keys
+  category: credentials
+  rest: [listApiKeys]
+  operation: GET /api-keys
+  binding: rest
+  confidence: high
+  auth: mk- (keys:read)
+- tool: create_api_key
+  category: credentials
+  rest: [createApiKey]
+  operation: POST /api-keys
+  binding: rest
+  confidence: high
+  auth: mk- (keys:create)
+- tool: update_api_key
+  category: credentials
+  rest: [updateApiKey]
+  operation: PATCH /api-keys/{keyId}
+  binding: rest
+  confidence: high
+  auth: mk- (keys:manage)
+- tool: revoke_api_key
+  category: credentials
+  rest: [revokeApiKey]
+  operation: DELETE /api-keys/{keyId}
+  binding: rest
+  confidence: high
+  auth: mk- (keys:manage)
+mcp_only: []
+rest_only: []
+rest_only_note: >-
+  Every one of the 23 published operations is covered, because the candidate tool set was
+  derived from them. This will stop being true the moment 0G publishes a real tools/list.
+skill_only:
+- capability: 0G Storage upload / download / merkle verification
+  reason: >-
+    Storage is not on the Router REST surface at all. It is reached through the Go/TS SDKs, the
+    0g-storage-client CLI, or a self-run gateway — so the three storage skills bind to SDK calls,
+    not to any operation in this spec.
+  skills: [storage-upload-file, storage-download-file, storage-merkle-verification]
+- capability: Direct (wallet-signed) inference and per-provider sub-accounts
+  reason: >-
+    The Direct path deliberately has no API key and no gateway endpoint; the caller's wallet
+    signs each request against a provider sub-account. No REST operation exists to bind to.
+  skills: [compute-account-management, compute-streaming-chat, compute-provider-discovery]
+- capability: Fine-tuning
+  reason: >-
+    Run through the compute broker CLI against the Direct path. The Router spec has no
+    fine-tuning operation.
+  skills: [compute-fine-tuning]
+- capability: Contract scaffold / deploy / interact on 0G Chain
+  reason: EVM JSON-RPC and Solidity tooling, not a Router operation.
+  skills: [chain-scaffold-project, chain-deploy-contract, chain-interact-contract]
+- capability: Cross-layer composition (storage+chain, compute+storage)
+  reason: Compose two SDK surfaces; no single REST operation backs them.
+  skills: [cross-layer-storage-plus-chain, cross-layer-compute-plus-storage]
+coverage:
+  tools_named: 23
+  tools_bound: 23
+  mcp_only: 0
+  rest_ops_total: 23
+  rest_ops_with_tool: 23
+  published_skills: 14
+  published_skills_bound_to_rest: 2
+  published_skills_bound_note: >-
+    Only compute-text-to-image and compute-speech-to-text describe capabilities the Router REST
+    surface also exposes (images/generations, audio/transcriptions), and even those are written
+    against the Direct SDK path rather than the Router. The other 12 have no REST counterpart.

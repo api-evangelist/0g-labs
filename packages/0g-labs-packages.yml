@@ -1,0 +1,88 @@
+generated: '2026-08-05'
+method: searched
+source: >-
+  npm registry, pkg.go.dev, and the 0G developer documentation install commands
+  (https://docs.0g.ai/llms-full.txt)
+notes: >-
+  0G ships first-party client libraries for Storage (TypeScript + Go) and Compute (TypeScript).
+  There is no first-party Python or Rust client library on a public registry as of this probe;
+  the Rust code in the 0gfoundation org is node software (0g-storage-node, 0g-da-node,
+  0g-reth), not a client SDK. The Router API itself needs no 0G SDK at all — it is
+  OpenAI-/Anthropic-wire-compatible, so `openai`, `anthropic`, LangChain, LlamaIndex and the
+  Vercel AI SDK work by changing base_url and api_key.
+packages:
+- language: javascript
+  registry: npm
+  name: '@0gfoundation/0g-storage-ts-sdk'
+  version: 1.2.10
+  url: https://www.npmjs.com/package/@0gfoundation/0g-storage-ts-sdk
+  install: npm install @0gfoundation/0g-storage-ts-sdk
+  repository: https://github.com/0gfoundation/0g-storage-ts-sdk
+  description: JS/TS SDK for 0G Storage — upload, download, KV, browser support.
+  official: true
+  http_status: 200
+- language: javascript
+  registry: npm
+  name: '@0gfoundation/0g-compute-ts-sdk'
+  version: 0.9.0
+  url: https://www.npmjs.com/package/@0gfoundation/0g-compute-ts-sdk
+  install: npm install @0gfoundation/0g-compute-ts-sdk
+  repository: https://github.com/0glabs/0g-serving-user-broker
+  description: >-
+    TS SDK for the 0G Compute Network — the Direct (wallet-signed, per-provider sub-account)
+    path, including the broker CLI used for fine-tuning.
+  official: true
+  http_status: 200
+- language: javascript
+  registry: npm
+  name: '@0glabs/0g-ts-sdk'
+  version: 0.3.3
+  url: https://www.npmjs.com/package/@0glabs/0g-ts-sdk
+  install: npm install @0glabs/0g-ts-sdk
+  repository: https://github.com/0glabs/0g-ts-sdk
+  description: >-
+    JS SDK for 0G Storage under the older @0glabs npm scope. Superseded in the current docs by
+    @0gfoundation/0g-storage-ts-sdk; recorded here because it is still published and first-party.
+  official: true
+  status: superseded
+  http_status: 200
+- language: go
+  registry: pkg.go.dev
+  name: github.com/0gfoundation/0g-storage-client
+  url: https://pkg.go.dev/github.com/0gfoundation/0g-storage-client
+  install: go get github.com/0gfoundation/0g-storage-client
+  repository: https://github.com/0gfoundation/0g-storage-client
+  description: >-
+    Go client for 0G Storage — indexer client, transfer/upload/download, KV batcher. Also the
+    source the 0g-storage-client CLI binary is built from (see cli/0g-labs-cli.yml).
+  official: true
+  http_status: 200
+- language: go
+  registry: pkg.go.dev
+  name: github.com/0gfoundation/0g-da-client
+  url: https://pkg.go.dev/github.com/0gfoundation/0g-da-client
+  install: go get github.com/0gfoundation/0g-da-client
+  repository: https://github.com/0gfoundation/0g-da-client
+  description: Go client for the 0G data-availability layer (DA client node + blob submission).
+  official: true
+  http_status: 200
+compatible_third_party:
+- note: >-
+    Because the Router is OpenAI- and Anthropic-compatible, the vendors' own clients work
+    unchanged against https://router-api.0g.ai/v1. These are NOT 0G packages and are listed only
+    as the documented integration path.
+  libraries:
+  - openai (Python)
+  - openai (Node)
+  - anthropic
+  - LangChain
+  - LlamaIndex
+  - Vercel AI SDK
+  source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/faq
+not_found:
+- registry: pypi
+  probed: [zerog, 0g-sdk, 0g-compute]
+  status: 404
+- registry: crates.io
+  probed: [0g-storage-client, zerog]
+  note: no first-party client crate published

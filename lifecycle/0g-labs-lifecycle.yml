@@ -1,0 +1,68 @@
+generated: '2026-08-05'
+method: searched
+source: openapi/0g-labs-router-openapi.yml
+docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+versioning:
+  scheme: uri-path
+  current: v1
+  spec_version: '1.0'
+  base: https://router-api.0g.ai/v1
+  stability_marking: >-
+    Per-endpoint and per-field stability is marked inline in the OpenAPI description with
+    [beta]. Endpoints currently carrying [beta]: GET /v1/account, POST /v1/account/onboarded,
+    and the video-usage request_id format note.
+  chain_versioning:
+    detail: >-
+      The chain layer versions by named network, not by URL. Mainnet is "Aristotle"
+      (chain ID 16661, https://evmrpc.0g.ai). Testnet is "Galileo" (chain ID 16602,
+      https://evmrpc-testnet.0g.ai).
+deprecation:
+  policy_url: null
+  policy_published: false
+  sunset_header: false
+  detail: >-
+    0G publishes no standalone deprecation policy page and does not advertise RFC 8594
+    Sunset/Deprecation headers. It DOES practise in-band deprecation notice: the OpenAPI carries
+    a Changelog section in info.description whose entries call out breaking behaviour changes
+    explicitly, and the routing docs mark a superseded surface as deprecated with a stated
+    replacement and a "will be phased out in a future release" warning.
+  observed_deprecations:
+  - item: 'JSON body `provider: {…}` routing object'
+    replaced_by: X-0G-Provider-* request headers
+    status: deprecated, kept for back-compat
+    reason: >-
+      Headers are the only routing surface that works uniformly across JSON, multipart and async
+      endpoints. Multipart endpoints have no body routing surface at all.
+    source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/routing
+  - item: sk- API key access to /v1/account/*
+    status: removed (breaking change, announced in the authentication docs)
+    replaced_by: mk- management key with the account:read scope
+    source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/authentication
+  - item: '"A0GI" token ticker'
+    status: deprecated
+    detail: A0GI was a testnet-only gas token on the retired Newton testnet (chain ID 16600). The mainnet ticker is 0G.
+    source: https://0g.ai/llms.txt
+  - item: '@0glabs/0g-ts-sdk npm package'
+    status: superseded
+    replaced_by: '@0gfoundation/0g-storage-ts-sdk'
+  breaking_change_notice_channel: >-
+    OpenAPI info.description "Changelog" section, with an ### Unreleased block for merged-but-not-live
+    changes that is cut into a dated ### vX.Y — YYYY-MM section on release.
+deprecated_operations: []
+deprecated_operations_note: >-
+  No operation in openapi/0g-labs-router-openapi.yml carries `deprecated: true`. The deprecations
+  above are at the field/surface level, documented in prose rather than marked in the spec.
+sla:
+  url: null
+  uptime_target: null
+  detail: >-
+    No published SLA or uptime target. The Router's availability posture is stated behaviourally
+    instead: round-robin across healthy providers with automatic failover, 502 when failover is
+    exhausted, 503 when no provider for the model is healthy, and an explicit refusal to fall
+    back to a different model on the caller's behalf.
+status_page: https://status.0g.ai
+status_page_status: 200
+support:
+  discord: https://discord.gg/0glabs
+  discord_channel: '#compute'
+  github_issues: https://github.com/0gfoundation

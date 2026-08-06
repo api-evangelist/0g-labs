@@ -1,0 +1,56 @@
+generated: '2026-08-05'
+method: searched
+source: https://github.com/0gfoundation/ask-ai-widget
+summary: >-
+  0G ships essentially no embeddable component library. The docs describe hosted web surfaces
+  (the pc.0g.ai console, the storage web tool, the explorers) but no drop-in elements a
+  developer places on their own page — with one exception, a React chat widget published as
+  source on GitHub but not to any registry.
+components:
+- family: chat
+  name: Ask AI Widget
+  package: '@0gfoundation/ask-ai-widget'
+  version: 0.1.0
+  repository: https://github.com/0gfoundation/ask-ai-widget
+  framework: React
+  description: >-
+    Floating "Ask AI" chatbot widget droppable into any React site, backed by 0G Compute for
+    inference.
+  official: true
+  distribution: source only
+  registry_status:
+    npm: 404
+    note: >-
+      Not published to npm as of 2026-08-05 (both `ask-ai-widget` and `@0gfoundation/ask-ai-widget`
+      return 404). Consumable today only by installing from the git repository.
+hosted_surfaces:
+- name: 0G Compute Console
+  url: https://pc.0g.ai
+  detail: >-
+    Wallet-connected dashboard for the Router — deposits, balance, API keys, management keys,
+    usage. A top-right toggle switches between Router mode and Advanced (Direct) mode. Sign-in
+    via MetaMask, WalletConnect, or Privy social sign-in (Google, X, Discord, TikTok) which
+    provisions an embedded wallet.
+  embeddable: false
+- name: 0G Storage Web Tool
+  url: https://storagescan-galileo.0g.ai/tool
+  detail: Browser upload/download against testnet storage for one-off transfers.
+  embeddable: false
+- name: ChainScan
+  url: https://chainscan.0g.ai
+  detail: Mainnet block explorer.
+  embeddable: false
+- name: StorageScan
+  url: https://storagescan.0g.ai
+  detail: Storage explorer.
+  embeddable: false
+- name: Ecosystem Explorer
+  url: https://explorer.0g.ai
+  embeddable: false
+- name: Builder Hub
+  url: https://build.0g.ai
+  embeddable: false
+not_found:
+- web components / custom elements
+- a hosted checkout or payment element
+- an embeddable dashboard or analytics iframe

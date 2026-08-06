@@ -1,0 +1,93 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for the 0G Compute Router API
+  version: 1.0.0
+extends: openapi/0g-labs-router-openapi.yml
+x-apievangelist:
+  generated: '2026-08-05'
+  method: generated
+  source: openapi/0g-labs-router-openapi.yml
+  rationale: >-
+    Two things are missing from an otherwise strong spec, and both are recorded here rather than
+    edited into the harvested document. (1) NOT ONE of the 23 operations declares an
+    operationId, so no tooling can name an operation stably — no SDK generator, no Arazzo
+    workflow, no MCP tool binding, no agent skill can reference them. (2) servers is the
+    relative "/v1", which is correct inside the reference site but leaves a downloaded copy of
+    the spec uncallable. Neither is a content judgement about 0G; both are mechanical and both
+    are proposals, not claims about what 0G publishes.
+actions:
+- target: $.info
+  update:
+    x-apievangelist-profile: https://apievangelist.com/
+    x-apievangelist-reviewed: '2026-08-05'
+    x-apievangelist-source: https://0gfoundation.github.io/0g-router/openapi.yaml
+- target: $.servers
+  description: >-
+    Replace the relative "/v1" with the absolute mainnet and testnet Router base URLs so a
+    downloaded copy of the spec is callable as-is.
+  update:
+  - url: https://router-api.0g.ai/v1
+    description: Mainnet (Aristotle, chain ID 16661)
+  - url: https://router-api-testnet.integratenetwork.work/v1
+    description: Testnet (Galileo, chain ID 16602)
+- target: $.tags
+  description: Declare the tags the operations already use, which the source document leaves as an empty array.
+  update:
+  - name: Inference
+    description: OpenAI- and Anthropic-compatible inference across chat, image, audio and video.
+  - name: Models
+    description: Live model catalog with pricing, context window, capabilities and TEE attestation.
+  - name: Provider
+    description: Live provider list with health, latency and per-provider pricing.
+  - name: Service Types
+    description: The service classes the network currently serves.
+  - name: Account
+    description: Balance, funds and usage reads. Management-key only.
+  - name: API Key
+    description: API key lifecycle. Management-key only, scope-gated.
+- target: $.paths['/chat/completions'].post
+  update: {operationId: createChatCompletion}
+- target: $.paths['/messages'].post
+  update: {operationId: createAnthropicMessage}
+- target: $.paths['/audio/transcriptions'].post
+  update: {operationId: createAudioTranscription}
+- target: $.paths['/images/generations'].post
+  update: {operationId: createImageGeneration}
+- target: $.paths['/images/edits'].post
+  update: {operationId: createImageEdit}
+- target: $.paths['/async/images/generations'].post
+  update: {operationId: submitAsyncImageGeneration}
+- target: $.paths['/async/images/edits'].post
+  update: {operationId: submitAsyncImageEdit}
+- target: $.paths['/videos'].post
+  update: {operationId: submitVideoGeneration}
+- target: $.paths['/videos/{id}'].get
+  update: {operationId: getVideoJob}
+- target: $.paths['/videos/{id}/content'].get
+  update: {operationId: downloadVideoContent}
+- target: $.paths['/routing/preview'].post
+  update: {operationId: previewRouting}
+- target: $.paths['/models'].get
+  update: {operationId: listModels}
+- target: $.paths['/providers'].get
+  update: {operationId: listProviders}
+- target: $.paths['/service-types'].get
+  update: {operationId: listServiceTypes}
+- target: $.paths['/account'].get
+  update: {operationId: getAccount}
+- target: $.paths['/account/funds'].get
+  update: {operationId: getAccountFunds}
+- target: $.paths['/account/usage/daily'].get
+  update: {operationId: getDailyUsage}
+- target: $.paths['/account/usage/history'].get
+  update: {operationId: getUsageHistory}
+- target: $.paths['/account/usage/stats'].get
+  update: {operationId: getUsageStats}
+- target: $.paths['/api-keys'].get
+  update: {operationId: listApiKeys}
+- target: $.paths['/api-keys'].post
+  update: {operationId: createApiKey}
+- target: $.paths['/api-keys/{keyId}'].patch
+  update: {operationId: updateApiKey}
+- target: $.paths['/api-keys/{keyId}'].delete
+  update: {operationId: revokeApiKey}

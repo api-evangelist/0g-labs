@@ -1,0 +1,155 @@
+generated: '2026-08-05'
+method: searched
+source: https://github.com/0gfoundation/0g-agent-skills
+source_detail: >-
+  Saved verbatim from the 0G Foundation's own repository. This is a PROVIDER-PUBLISHED skill
+  set, not a pipeline-generated one: 0G authors 14 SKILL.md files plus an AGENTS.md master
+  orchestration guide that defines activation triggers, workflow sequences, critical rules and
+  common mistakes. Fetched 2026-08-05, all 14 files HTTP 200.
+license: see LICENSE in the upstream repository
+orchestration_guide:
+  file: 0g-labs-AGENTS.md
+  source: https://raw.githubusercontent.com/0gfoundation/0g-agent-skills/main/AGENTS.md
+  detail: >-
+    Master orchestration file for AI coding assistants across all 14 skills in 4 categories.
+    Also ships as a Claude Code plugin (.claude-plugin/) with setups/, patterns/ (CHAIN.md,
+    COMPUTE.md, NETWORK_CONFIG.md, SECURITY.md, STORAGE.md, TESTING.md), examples/ and ci/.
+grounding:
+  bound_to: 0G Go/TypeScript SDKs and EVM tooling — NOT the Router OpenAPI
+  note: >-
+    These skills teach an agent to write SDK code (ZgFile, Indexer, the serving broker, ethers
+    v6, Hardhat/Foundry), not to call REST operations. See mcp/0g-labs-tool-crosswalk.yml
+    (skill_only) for the capability-by-capability reason each one has no Router counterpart.
+skills:
+- file: 0g-labs-storage-upload-file.md
+  name: Upload File to 0G Storage
+  category: storage
+  sdk: ['@0glabs/0g-ts-sdk ^0.3.3', 'ethers ^6.13.0']
+  triggers: [upload file, store on 0G, ZgFile, save to storage]
+  summary: >-
+    Upload files to 0G decentralized storage via the ZgFile API and Indexer. Files are chunked,
+    organized as a Merkle tree, distributed across storage nodes, and addressed by root hash.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/storage/upload-file/SKILL.md
+- file: 0g-labs-storage-download-file.md
+  name: Download File from 0G Storage
+  category: storage
+  sdk: ['@0glabs/0g-ts-sdk ^0.3.3', 'ethers ^6.13.0']
+  triggers: [download file, retrieve from 0G, get file, fetch from storage]
+  summary: Download and verify files by root hash, with optional Merkle proof validation.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/storage/download-file/SKILL.md
+- file: 0g-labs-storage-merkle-verification.md
+  name: Merkle Verification
+  category: storage
+  sdk: ['@0glabs/0g-ts-sdk ^0.3.3']
+  triggers: [verify file, merkle proof, data integrity, root hash]
+  summary: >-
+    Compute root hashes and cryptographically verify that downloaded data matches what was
+    originally uploaded.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/storage/merkle-verification/SKILL.md
+- file: 0g-labs-compute-provider-discovery.md
+  name: Provider Discovery
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', 'ethers ^6.13.0']
+  triggers: [list providers, find provider, verify provider, TEE]
+  summary: >-
+    Discover, filter and verify compute providers by service type (chatbot, text-to-image,
+    speech-to-text), check TEE verification status, and acknowledge providers.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/provider-discovery/SKILL.md
+- file: 0g-labs-compute-account-management.md
+  name: Account Management
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', 'ethers ^6.13.0']
+  triggers: [deposit, transfer funds, refund, check balance]
+  summary: >-
+    Manage funds across the Direct path's dual-account system — a main account that receives
+    deposits and per-provider sub-accounts holding funds locked for that provider.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/account-management/SKILL.md
+- file: 0g-labs-compute-streaming-chat.md
+  name: Streaming Chat Inference
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', 'ethers ^6.13.0']
+  triggers: [chatbot, inference, LLM, streaming chat, AI chat]
+  summary: Streaming and non-streaming conversational inference against 0G Compute providers.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/streaming-chat/SKILL.md
+- file: 0g-labs-compute-text-to-image.md
+  name: Text-to-Image Generation
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', 'ethers ^6.13.0']
+  triggers: [generate image, text-to-image, Flux, image generation]
+  summary: Generate images from text prompts on providers running Flux Turbo; multiple resolutions and batch generation.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/text-to-image/SKILL.md
+  router_counterpart: POST /v1/images/generations
+- file: 0g-labs-compute-speech-to-text.md
+  name: Speech-to-Text Transcription
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', 'ethers ^6.13.0']
+  triggers: [transcribe, speech-to-text, Whisper, audio transcription]
+  summary: Transcribe audio on providers running Whisper Large V3; JSON, text and SRT output.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/speech-to-text/SKILL.md
+  router_counterpart: POST /v1/audio/transcriptions
+- file: 0g-labs-compute-fine-tuning.md
+  name: Model Fine-Tuning
+  category: compute
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5 (CLI-based workflow)']
+  triggers: [fine-tune, train model, custom model, model training]
+  summary: >-
+    Upload training data, configure parameters, monitor training and download the resulting
+    model on 0G's distributed GPU network. Testnet only.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/compute/fine-tuning/SKILL.md
+- file: 0g-labs-chain-scaffold-project.md
+  name: Scaffold 0G Project
+  category: chain
+  sdk: ['ethers ^6.13.0', '@0glabs/0g-ts-sdk ^0.3.3', '@0glabs/0g-serving-broker ^0.6.5']
+  triggers: [new project, scaffold, initialize, create 0G app]
+  summary: Initialize a 0G dApp with pinned SDK versions, TypeScript config, env setup and boilerplate.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/chain/scaffold-project/SKILL.md
+- file: 0g-labs-chain-deploy-contract.md
+  name: Deploy Contract to 0G Chain
+  category: chain
+  sdk: ['ethers ^6.13.0', 'Hardhat or Foundry']
+  triggers: [deploy contract, Solidity, 0G Chain]
+  summary: 'Deploy Solidity contracts to 0G Chain. Critical rule: compile with evmVersion "cancun".'
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/chain/deploy-contract/SKILL.md
+- file: 0g-labs-chain-interact-contract.md
+  name: Interact with 0G Chain Contracts
+  category: chain
+  sdk: ['ethers ^6.13.0']
+  triggers: [call contract, read contract, interact, write contract]
+  summary: View functions, state-changing transactions, event listening and gas estimation via ethers v6.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/chain/interact-contract/SKILL.md
+- file: 0g-labs-cross-layer-storage-plus-chain.md
+  name: Storage + Chain Integration
+  category: cross-layer
+  sdk: ['@0glabs/0g-ts-sdk ^0.3.3', 'ethers ^6.13.0']
+  triggers: [on-chain reference, NFT metadata on 0G, store hash on-chain, registry]
+  summary: >-
+    On-chain references to off-chain data — NFT metadata storage, content registries and
+    verifiable document systems.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/cross-layer/storage-plus-chain/SKILL.md
+- file: 0g-labs-cross-layer-compute-plus-storage.md
+  name: Compute + Storage Integration
+  category: cross-layer
+  sdk: ['@0glabs/0g-serving-broker ^0.6.5', '@0glabs/0g-ts-sdk ^0.3.3', 'ethers ^6.13.0']
+  triggers: [AI with storage, generate and store, transcribe and store, AI pipeline]
+  summary: >-
+    End-to-end AI pipelines — generate content with AI and persist to decentralized storage, or
+    load data from storage and process with AI.
+  upstream: https://github.com/0gfoundation/0g-agent-skills/blob/main/skills/cross-layer/compute-plus-storage/SKILL.md
+related_packages:
+- name: 0g-compute-skills
+  url: https://github.com/0gfoundation/0g-compute-skills
+  detail: >-
+    A second, separately-packaged 0G skill (single SKILL.md plus references/). Not mirrored
+    here; recorded so the full published skill surface is visible.
+gaps:
+- id: skills-pin-superseded-sdk
+  detail: >-
+    Every skill pins @0glabs/0g-ts-sdk ^0.3.3 and @0glabs/0g-serving-broker ^0.6.5, while the
+    current docs install @0gfoundation/0g-storage-ts-sdk (1.2.10) and
+    @0gfoundation/0g-compute-ts-sdk (0.9.0). Both @0glabs packages still resolve on npm (200 on
+    2026-08-05), so the skills work — but an agent following them verbatim installs the
+    superseded @0glabs scope rather than what the docs now tell a human to install.
+- id: no-router-skill
+  detail: >-
+    None of the 14 skills covers the Router — the surface 0G's own docs call "recommended for
+    most applications". The skills all target the Direct wallet-signed path.

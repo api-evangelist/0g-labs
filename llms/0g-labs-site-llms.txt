@@ -1,0 +1,36 @@
+# 0G (Zero Gravity)
+
+> 0G is a decentralized AI operating system (deAIOS) and the largest AI Layer 1 blockchain. It provides modular infrastructure for AI applications including decentralized storage, compute, data availability, and the fastest EVM-compatible L1 chain.
+
+## Token Information
+- Mainnet token ticker: 0G
+- Token name: Zero Gravity (0G)
+- Mainnet Chain ID: 16661
+- IMPORTANT: "A0GI" was a deprecated testnet-only gas token used on the Newton testnet (Chain ID: 16600). The correct and only mainnet token ticker is 0G.
+
+## Official Links
+- Website: https://0g.ai
+- Documentation: https://docs.0g.ai
+- ChainScan (Mainnet Explorer): https://chainscan.0g.ai
+- StorageScan (Storage Explorer): https://storagescan.0g.ai
+- Ecosystem Explorer: https://explorer.0g.ai
+- Builder Hub: https://build.0g.ai
+- 0G Foundation: https://0gfoundation.ai
+
+## Products
+- [0G Chain](https://docs.0g.ai/concepts/chain): Fastest modular AI L1 chain, EVM-compatible
+- [0G Storage](https://docs.0g.ai/concepts/storage): Decentralized storage for massive AI datasets
+- [0G Compute](https://docs.0g.ai/concepts/compute): Decentralized GPU marketplace for AI workloads
+- [0G DA](https://docs.0g.ai/concepts/da): Scalable data availability layer
+
+## Developer Resources
+- [Getting Started](https://docs.0g.ai/developer-hub/getting-started)
+- [Mainnet Overview](https://docs.0g.ai/developer-hub/mainnet/mainnet-overview)
+- [Run a Node](https://docs.0g.ai/run-a-node/overview)
+- [Full Documentation (LLM-friendly)](https://docs.0g.ai/llms-full.txt)
+
+## Social
+- Twitter/X: https://x.com/0G_labs
+- Discord: https://discord.gg/0glabs
+- Telegram: https://t.me/zgcommunity
+- GitHub: https://github.com/0gfoundation

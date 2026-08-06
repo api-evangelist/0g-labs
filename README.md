@@ -42,5 +42,44 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-0G Labs is a company surfaced via the API Evangelist harvest backlog (source: secondary-market) and added to the network as a stub for full-pipeline profiling.
-- https://www.hiive.com/securities/0g-labs-stock
+0G Labs builds **0G (Zero Gravity)**, a decentralized AI operating system: an EVM-compatible L1
+(0G Chain, mainnet "Aristotle", chain ID 16661), a decentralized storage network addressed by
+Merkle root hash (0G Storage), a data-availability layer for rollups (0G DA), and a TEE-attested
+GPU marketplace for AI inference (0G Compute).
+
+## API surface
+
+| API | Base URL | Contract |
+|---|---|---|
+| 0G Compute Router | `https://router-api.0g.ai/v1` | [OpenAPI 3.0](openapi/0g-labs-router-openapi.yml) — 23 operations, 126 schemas |
+| 0G Chain JSON-RPC | `https://evmrpc.0g.ai` | Ethereum JSON-RPC (EIP-1474) |
+| 0G DA | gRPC | [Disperser](grpc/0g-labs-da-disperser.proto) · [Retriever](grpc/0g-labs-da-retriever.proto) · [Signer](grpc/0g-labs-da-signer.proto) |
+| 0G Storage Indexer | `https://indexer-storage-turbo.0g.ai` | Go/TS SDKs + `0g-storage-client` CLI |
+
+The Router is OpenAI- and Anthropic-wire-compatible: change `base_url` and `api_key` and an
+existing OpenAI client works. `GET /v1/models`, `/v1/providers` and `/v1/service-types` answer
+anonymously, so the live catalog, pricing and provider health can be read with no credential.
+
+## Notable findings
+
+- **The OpenAPI is not where you would look for it.** `router-api.0g.ai/openapi.json`,
+  `docs.0g.ai/openapi.json` and `0g.ai/openapi.json` all return 404. The real 183KB spec is
+  published on GitHub Pages at `https://0gfoundation.github.io/0g-router/openapi.yaml`, linked
+  only from the Router authentication docs page.
+- **The changelog lives inside the OpenAPI.** `docs.0g.ai/changelog` is a 404; release notes are
+  a `## Changelog` section of `info.description`.
+- **0G ships Agent Skills, not MCP.** 14 provider-authored `SKILL.md` files plus an `AGENTS.md`
+  orchestration guide — harvested verbatim into [`skills/`](skills/_index.yml). No first-party
+  MCP server exists.
+- **The skills don't cover the Router.** All 14 target the wallet-signed Direct SDK path, not the
+  gateway 0G's own docs call "recommended for most applications" — see
+  [`mcp/0g-labs-tool-crosswalk.yml`](mcp/0g-labs-tool-crosswalk.yml).
+- **`llms.txt` links 404.** Every entry in `docs.0g.ai/llms.txt` carries a `/docs/` path prefix
+  that returns 404; the same page without it returns 200.
+- **No operationIds.** None of the 23 operations declares one; proposals are recorded in
+  [`overlays/`](overlays/0g-labs-router-overlay.yaml) rather than edited into the harvested spec.
+- **No `/.well-known/` surface, no A2A agent card, no security.txt, no published certifications.**
+
+Sources: <https://0g.ai> · <https://docs.0g.ai> · <https://0gfoundation.github.io/0g-router/> ·
+<https://github.com/0gfoundation>
+

@@ -1,0 +1,126 @@
+generated: '2026-08-05'
+method: derived
+source: openapi/0g-labs-router-openapi.yml
+docs: https://docs.0g.ai
+note: >-
+  Standards conformance derived from the published OpenAPI plus explicit claims in the 0G docs.
+  0G publishes no security certifications (no SOC 2, ISO 27001, PCI DSS, HIPAA or FedRAMP claim
+  was found on any 0G host), so no Compliance pointer is emitted — its assurance story is
+  hardware attestation (TEE) and on-chain settlement rather than an audited compliance program.
+standards:
+- id: openapi-3.0
+  conforms: true
+  evidence: >-
+    openapi: 3.0.0 with 21 paths / 23 operations, 126 component schemas, and both security
+    schemes defined and applied per-operation. Published at
+    https://0gfoundation.github.io/0g-router/openapi.yaml (200, text/yaml, 183,793 bytes).
+- id: openai-chat-completions-api
+  conforms: true
+  evidence: >-
+    POST /v1/chat/completions with the OpenAI request/response shape, streaming, tool calling,
+    JSON mode (ResponseFormat) and reasoning tokens. GET /v1/models returns the OpenAI list
+    envelope. Docs state any OpenAI client works by changing base_url and api_key.
+- id: anthropic-messages-api
+  conforms: partial
+  evidence: >-
+    POST /v1/messages with AnthropicRequest/AnthropicResponse, content blocks, usage and cache
+    creation. Partial because only models whose supported_formats include the Anthropic format
+    are reachable there; others return 400 naming the formats they do serve.
+- id: openai-rate-limit-headers
+  conforms: true
+  evidence: >-
+    X-RateLimit-Limit-Requests / -Remaining-Requests / -Reset-Requests on every inference
+    response, plus Retry-After on 429.
+- id: rfc6750-bearer-token
+  conforms: true
+  evidence: 'Authorization: Bearer <token> on both securitySchemes (ApiKeyAuth sk-, ManagementKeyAuth mk-).'
+- id: oauth2
+  conforms: false
+  evidence: >-
+    No oauth2 securityScheme in the spec; the authentication docs state explicitly "No OAuth
+    flow, no wallet signature per request, no session tokens."
+- id: oidc
+  conforms: false
+  evidence: /.well-known/openid-configuration returns 404 on every 0G host.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: >-
+    Errors use the OpenAI error envelope ({error:{message,type,code}, request_id}) with
+    application/json, not application/problem+json.
+- id: rfc9116-security-txt
+  conforms: false
+  evidence: /.well-known/security.txt returns 404 on 0g.ai, docs.0g.ai and router-api.0g.ai.
+- id: rfc8594-sunset-header
+  conforms: false
+  evidence: >-
+    No Sunset/Deprecation header advertised. Deprecation is announced in prose — the OpenAPI
+    info.description Changelog and inline docs warnings.
+- id: rfc8615-well-known
+  conforms: false
+  evidence: No /.well-known/ document is served on any 0G host.
+- id: llmstxt
+  conforms: partial
+  evidence: >-
+    /llms.txt is served on both https://0g.ai (1,693 bytes) and https://docs.0g.ai (18,405
+    bytes), plus /llms-full.txt (602,979 bytes) on the docs host. Partial because every Table
+    of Contents link in the docs llms.txt carries a /docs/ path prefix that 404s — the index is
+    unresolvable as published.
+- id: a2a-agent-card
+  conforms: false
+  evidence: >-
+    /.well-known/agent-card.json and /.well-known/agent.json return 404 on 0g.ai, docs.0g.ai,
+    router-api.0g.ai and pc.0g.ai.
+- id: model-context-protocol
+  conforms: false
+  evidence: >-
+    No first-party hosted MCP server was found. 0G ships Agent Skills instead (14 published
+    SKILL.md files at github.com/0gfoundation/0g-agent-skills). Third-party 0G MCP servers exist
+    but are not 0G-operated.
+- id: agent-skills
+  conforms: true
+  evidence: >-
+    14 provider-authored Agent Skills plus an AGENTS.md orchestration guide published at
+    https://github.com/0gfoundation/0g-agent-skills, and a second skill package at
+    https://github.com/0gfoundation/0g-compute-skills.
+- id: eip-1474-ethereum-json-rpc
+  conforms: true
+  evidence: >-
+    https://evmrpc.0g.ai answered eth_chainId with 0x4115 (16661) on 2026-08-05. Docs state
+    Hardhat, Foundry, Truffle, ethers.js and viem work unchanged.
+- id: erc-20
+  conforms: true
+  evidence: Wrapped0GBase precompile at 0x…1001 wraps the native token as ERC-20 with quota-based mint and burn.
+- id: erc-7857
+  conforms: true
+  evidence: >-
+    0G authors and implements ERC-7857 (encrypted NFT metadata) as the standard behind Agentic
+    IDs. https://docs.0g.ai/developer-hub/building-on-0g/agentic-id/erc7857
+- id: erc-8004
+  conforms: true
+  evidence: >-
+    "0G officially supports ERC-8004, the Trustless Agent standard. 0G's ERC-8004 registries are
+    listed in the official standard repo."
+    https://docs.0g.ai/developer-hub/building-on-0g/agentic-id/erc8004
+- id: intel-tdx-attestation
+  conforms: true
+  evidence: >-
+    GET /v1/models returns tee_attested: true, tee_type: TDX, tee_verifier: dstack per model,
+    and verifiability: TeeML. verify_tee: true makes the Router verify the provider's TEE
+    signature synchronously and report tee_verified in x_0g_trace.
+- id: op-stack-da
+  conforms: true
+  evidence: Documented OP Stack rollup integration against 0G DA.
+- id: arbitrum-nitro-da
+  conforms: true
+  evidence: Documented Arbitrum Nitro rollup integration against 0G DA.
+- id: eigenlayer-avs
+  conforms: true
+  evidence: Documented EigenLayer AVS built on 0G DA.
+- id: babylon-avs
+  conforms: true
+  evidence: Documented Babylon AVS built on 0G DA.
+certifications_published: []
+certifications_note: >-
+  No SOC 2, ISO 27001, PCI DSS, HIPAA, FedRAMP, GDPR or CSA STAR claim was found on 0g.ai,
+  docs.0g.ai or any 0G subdomain. probe-security-programs.py returned trust=none. No Compliance
+  or TrustCenter pointer is emitted.

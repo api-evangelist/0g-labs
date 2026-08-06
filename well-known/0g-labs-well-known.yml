@@ -1,0 +1,92 @@
+generated: '2026-08-05'
+method: probed
+source: live GET of /.well-known/* and /llms.txt on every 0G host in apis.yml
+summary: >-
+  0G publishes no /.well-known/ discovery surface on any host — no security.txt, no OIDC or
+  OAuth authorization-server metadata (consistent with the Router's bearer-key auth, which has no
+  OAuth flow), no api-catalog, no ai-plugin.json, and no A2A agent card. It DOES publish llms.txt
+  on both the marketing site and the docs host, plus llms-full.txt on the docs host.
+hosts:
+- host: https://0g.ai
+  documents:
+  - path: /llms.txt
+    status: 200
+    file: ../llms/0g-labs-site-llms.txt
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /openapi.json
+    status: 404
+- host: https://docs.0g.ai
+  documents:
+  - path: /llms.txt
+    status: 200
+    file: ../llms/0g-labs-llms.txt
+  - path: /llms-full.txt
+    status: 200
+    note: >-
+      602,979 bytes. Deliberately NOT committed — *-llms-full.txt is gitignored because these
+      verbatim docs dumps embed vendor example tokens that trip GitHub push-protection.
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /openapi.json
+    status: 404
+- host: https://router-api.0g.ai
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/oauth-protected-resource
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /.well-known/agent.json
+    status: 404
+  - path: /openapi.json
+    status: 404
+    note: >-
+      The real OpenAPI is NOT on the API host — it is published at
+      https://0gfoundation.github.io/0g-router/openapi.yaml (200, text/yaml, 183,793 bytes),
+      linked from the Router authentication docs page as "Router API reference".
+  - path: /v1/models
+    status: 200
+    note: anonymous, unauthenticated — the live model catalog with pricing and TEE attestation
+  - path: /v1/providers
+    status: 200
+    note: anonymous — live provider list with health and pricing
+  - path: /v1/service-types
+    status: 200
+    note: anonymous — chatbot, speech-to-text, text-to-image, video-generation
+- host: https://pc.0g.ai
+  documents:
+  - path: /.well-known/agent-card.json
+    status: 404
+  - path: /openapi.json
+    status: 404
+findings:
+- id: llms-txt-links-404
+  severity: low
+  detail: >-
+    Every "Table of Contents" link in https://docs.0g.ai/llms.txt carries a /docs/ path prefix
+    (e.g. https://docs.0g.ai/docs/developer-hub/.../router/authentication) that returns 404. The
+    same page without the /docs/ segment returns 200. The llms.txt index is therefore
+    unresolvable as published — an agent following it hits 404 on every entry.
+  evidence:
+  - url: https://docs.0g.ai/docs/developer-hub/building-on-0g/compute-network/router/authentication
+    status: 404
+  - url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/authentication
+    status: 200

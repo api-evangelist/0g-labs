@@ -1,0 +1,185 @@
+generated: '2026-08-05'
+method: derived
+source: openapi/0g-labs-router-openapi.yml
+docs: https://0gfoundation.github.io/0g-router/
+summary: >-
+  Derived from the 126 component schemas and 23 operations of the 0G Router OpenAPI. The domain
+  has three cores that meet at a single request: an INFERENCE core (model, provider, service
+  type, request, trace), an ACCOUNT/BILLING core (wallet address, router ledger, payment-layer
+  vault, usage rows), and a CREDENTIAL core (API keys, management keys, scopes). The
+  distinguishing feature versus a conventional AI gateway is that the account's primary key is
+  an on-chain wallet address and settlement is a chain event, not a database row.
+identifiers:
+  account_key: EVM wallet address (0x…40 hex)
+  request_handle: X-Request-ID, echoed on every response and recorded on the usage row
+  provider_key: on-chain provider address (0x…)
+  model_key:
+    id: canonical_id (lowercased slug, e.g. 0gm-1.0-35b-a3b)
+    display: name / model_id (e.g. 0GM-1.0-35B-A3B)
+  async_job_request_id_format: async-<8 chars of provider address>-<job id>
+  async_job_request_id_video_exception: async-<16 hex>-<job id>
+  grant_id_prefix: 'pcg-'
+  stripe_topup_id_prefix: 'pi-'
+entities:
+- name: Account
+  schema: AccountResponse
+  key: address (wallet)
+  fields: [address, created_at, onboarded_at]
+  note: onboarded_at is null until the onboarding flow is completed or dismissed. [beta]
+- name: Funds
+  schema: FundsResponse
+  composed_of: [RouterLedgerFunds, PaymentLayerFunds]
+  note: >-
+    The single display balance. total = (deposit + credit − pending_charge) + vault_balance and
+    MAY be negative when the caller owes the Router. Distinct from the Router-ledger-only
+    balance, which is always >= 0.
+- name: RouterLedger
+  schema: RouterLedgerFunds
+  fields: [deposit_balance, credit_balance, pending_charge]
+- name: PaymentLayerVault
+  schema: PaymentLayerFunds
+  note: Shared multi-app funding pool across all 0G products; Router pulls tranches on demand.
+- name: APIKey
+  schema: APIKeyItem
+  key: keyId
+  prefix: sk-
+  fields: [label, created_at, last_used_at]
+- name: ManagementKey
+  schema: MgmtKeyItem
+  prefix: mk-
+  fields: [scopes, last_used_at, last_source_ip]
+- name: Model
+  schema: ModelEntry
+  key: canonical_id
+  fields: [id, name, description, owned_by, type, context_length, max_completion_tokens, supported_parameters, supported_formats, default_parameters, verifiability, tee_attested, tee_type, tee_verifier, provider_count]
+  embeds: [ModelArchitecture, ModelPricing]
+- name: ModelPricing
+  schema: ModelPricing
+  embeds: [ModelPriceVariant, ModelPricingTier]
+  note: prompt/completion prices in raw neurons plus a pricing_usd rendering; video adds variants with resolution tiers.
+- name: Provider
+  schema: ProviderEntry
+  key: address (on-chain)
+  fields: [model_id, canonical_id, service_type, is_healthy, uptime, latency, tee_acknowledged, name, pricing]
+- name: ServiceType
+  schema: ServiceTypeEntry
+  fields: [type, label, provider_count]
+  observed_values: [chatbot, speech-to-text, text-to-image, video-generation]
+- name: ChatCompletion
+  schema: ChatCompletionResponseWithTrace
+  embeds: [Choice, ChatMessage, DeltaMessage, Usage, PromptTokensDetails, TraceInfo]
+- name: AnthropicMessage
+  schema: AnthropicResponse
+  embeds: [AnthropicContentBlock, AnthropicUsage, AnthropicCacheCreation]
+  note: parallel projection of the same inference core through the Anthropic wire shape.
+- name: Trace
+  schema: TraceInfo
+  wire_field: x_0g_trace
+  note: >-
+    Attached to every Router response. Carries billing (input_cost / output_cost / total_cost,
+    currency) and tee_verified when verify_tee was requested.
+- name: RoutePreview
+  schema: RoutePreviewResponse
+  embeds: [RoutePreviewCandidate, ProviderPreferences]
+  note: dry-run resolution of which provider a request would select.
+- name: UsageLogEntry
+  schema: UsageLogEntry
+  note: one row per request — model, provider address, token counts, cost, request_id, source.
+- name: CreditGrant
+  schema: CreditGrantResponse
+  embeds: [ProjectGrantQuotaSummary, ProjectGrantDistributionItem]
+  idempotency: DistributeProjectCreditRequest requires an idempotency_key, echoed on the distribution.
+- name: StripeTopup
+  schema: StripeTopupEntry
+  key: Stripe PaymentIntent id
+  note: fiat top-up rows; the pi_… id is the idempotency-keyed reference for support.
+- name: Error
+  schema: ErrorResponse
+  embeds: [ErrorDetail]
+relationships:
+- from: Account
+  to: APIKey
+  kind: has_many
+  via: owner wallet address
+- from: Account
+  to: ManagementKey
+  kind: has_many
+  via: owner wallet address
+- from: Account
+  to: Funds
+  kind: has_one
+  via: address
+- from: Funds
+  to: RouterLedger
+  kind: has_one
+  via: composition
+- from: Funds
+  to: PaymentLayerVault
+  kind: has_one
+  via: composition
+- from: Model
+  to: Provider
+  kind: has_many
+  via: canonical_id / model_id
+- from: Provider
+  to: ServiceType
+  kind: belongs_to
+  via: service_type
+- from: Model
+  to: ModelPricing
+  kind: has_one
+  via: pricing
+- from: ModelPricing
+  to: ModelPriceVariant
+  kind: has_many
+  via: variants
+- from: ChatCompletion
+  to: Model
+  kind: belongs_to
+  via: model
+- from: ChatCompletion
+  to: Provider
+  kind: belongs_to
+  via: routed provider address
+- from: ChatCompletion
+  to: Trace
+  kind: has_one
+  via: x_0g_trace
+- from: ChatCompletion
+  to: Usage
+  kind: has_one
+  via: usage
+- from: UsageLogEntry
+  to: APIKey
+  kind: belongs_to
+  via: api_key_id
+- from: UsageLogEntry
+  to: Provider
+  kind: belongs_to
+  via: provider_address
+- from: UsageLogEntry
+  to: Model
+  kind: belongs_to
+  via: model
+- from: CreditGrant
+  to: Account
+  kind: has_many
+  via: recipient_address
+- from: RoutePreview
+  to: Provider
+  kind: has_many
+  via: candidates
+observations:
+- id: undocumented-admin-surface
+  detail: >-
+    126 component schemas back only 23 published paths. Admin, partner, project-grant, Stripe
+    checkout, Privy sign-in and settlement-mode schemas (AdminRoleView, CreatePartnerRequest,
+    stripeCheckoutRequest, PrivySigninRequest, setSettlementModeRequest, …) are defined in the
+    public spec but have no corresponding public operation — an internal console surface leaking
+    into the published contract rather than a callable API.
+- id: no-operation-ids
+  detail: >-
+    Not one of the 23 operations declares an operationId. Every operation does carry a summary,
+    a description and a tag, so the spec is otherwise well-formed; the missing operationIds are
+    what stop tooling (and this pipeline's Arazzo/skill grounding) from naming operations
+    stably. Recorded in overlays/0g-labs-router-overlay.yaml as our proposed ids.

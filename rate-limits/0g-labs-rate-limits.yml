@@ -1,0 +1,62 @@
+generated: '2026-08-05'
+method: searched
+source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/rate-limits
+api: 0G Compute Router API
+summary: >-
+  0G publishes the rate-limit MECHANISM but deliberately not the numbers. The docs page states
+  outright that "the exact thresholds depend on your account state and may evolve as we tune
+  them — this page documents how to observe and react to the limit, not the specific numbers."
+  Every inference response therefore carries your current limit in a header, which is the
+  intended way to discover it. Recorded here as published: signaling is complete, published
+  numeric limits are none.
+published_numeric_limits: false
+rate_limits:
+- name: per-account request limit
+  scope: account
+  window: minute
+  limit_count: null
+  limit_note: >-
+    Not published. Read X-RateLimit-Limit-Requests off any inference response to learn your
+    current per-minute limit.
+  discovery: response header
+signaling:
+  headers:
+  - name: X-RateLimit-Limit-Requests
+    meaning: your current per-minute request limit
+  - name: X-RateLimit-Remaining-Requests
+    meaning: how many requests remain in this window
+  - name: X-RateLimit-Reset-Requests
+    meaning: ISO-8601 timestamp when the window resets
+  standard: OpenAI-compatible rate-limit headers
+  present_on: every inference response
+exceeded:
+  status: 429
+  header: Retry-After
+  header_unit: seconds
+  example_value: 15
+  body:
+    error:
+      message: Rate limit exceeded. Please try again later.
+      type: rate_limit_error
+      code: rate_limit_exceeded
+  guidance: >-
+    Honor Retry-After. Do not retry in a tight loop — the Router will keep returning 429 and
+    real requests will be delayed behind them.
+roadmap:
+  status: announced, not shipped
+  detail: >-
+    Per-API-key throughput controls — explicit RPM (requests per minute) and TPM (tokens per
+    minute) budgets settable in the dashboard — are documented as "coming soon".
+related_limits:
+- name: min_cost admission floor
+  detail: >-
+    An inference request is admitted only if the account can cover a minimum charge. The floor
+    rises from 0.00001 0G to 0.01 0G. Below it the request is refused at admission rather than
+    rate-limited.
+  source: openapi/0g-labs-router-openapi.yml (info.description Changelog)
+- name: testnet faucet
+  detail: 0.1 0G per day per address on the Galileo testnet faucet.
+  source: https://faucet.0g.ai
+cross_links:
+  errors: errors/0g-labs-problem-types.yml
+  conventions: conventions/0g-labs-conventions.yml

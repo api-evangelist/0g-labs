@@ -1,0 +1,124 @@
+generated: '2026-08-05'
+method: searched
+source: openapi/0g-labs-router-openapi.yml
+docs: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/authentication
+summary:
+  types:
+  - apiKey
+  api_key_in:
+  - header
+  oauth2_flows: []
+  note: >-
+    No OAuth flow, no wallet signature per request, no session tokens on the Router. Two
+    prefixed bearer credentials do everything. A separate wallet JWT (sign-in session at
+    pc.0g.ai) is required for management-key administration and is not issuable as a key.
+    The 0G Compute "Direct" path is different: it has no API key at all — the caller's wallet
+    signs each request against a per-provider sub-account.
+schemes:
+- name: ApiKeyAuth
+  type: apiKey
+  in: header
+  parameter: Authorization
+  format: Bearer sk-...
+  prefix: sk-
+  purpose: >-
+    Call inference endpoints (/v1/chat/completions, /v1/messages, /v1/images/*,
+    /v1/audio/transcriptions, /v1/videos, /v1/routing/preview). Billed against the account's
+    on-chain deposit.
+  description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'
+  issued_at: https://pc.0g.ai
+  issuance: >-
+    Dashboard > API Keys. The full secret is shown once on creation; the dashboard stores only a
+    hash. Keys are labelled, listed with created-at and last-used, and revocable instantly — a
+    revoked key returns 401 api_key_revoked on its next call.
+  scoped: false
+  sources:
+  - openapi/0g-labs-router-openapi.yml
+- name: ManagementKeyAuth
+  type: apiKey
+  in: header
+  parameter: Authorization
+  format: Bearer mk-...
+  prefix: mk-
+  purpose: >-
+    Administer the account — read balance/usage/history and list, create, edit or revoke API
+    keys. Not billed. Cannot call inference.
+  description: >-
+    Management key for account read and API key management. Capabilities are scope-limited per
+    key (account:read, keys:read, keys:create, keys:manage). Format: "Bearer mk-..."
+  issued_at: https://pc.0g.ai
+  issuance: Settings > Management Keys. Each key carries an explicit scope allowlist. Keys do not expire.
+  scoped: true
+  scopes:
+  - name: account:read
+    description: Read balance, usage and per-request history (GET /v1/account/*).
+  - name: keys:read
+    description: List API keys (GET /v1/api-keys).
+  - name: keys:create
+    description: Create API keys (POST /v1/api-keys).
+  - name: keys:manage
+    description: Edit or revoke API keys (PATCH / DELETE /v1/api-keys/{keyId}).
+  presets:
+  - name: Read-only
+    scopes: [account:read, keys:read]
+  - name: Key Manager
+    scopes: [keys:read, keys:manage]
+  - name: Full Admin
+    scopes: [account:read, keys:read, keys:create, keys:manage]
+  audit_fields:
+  - last_used_at
+  - last_source_ip
+  audit_note: >-
+    Updated on every successful mk- request, coalesced to at most one write per key per 60s.
+    IPv4-mapped IPv6 addresses are normalized to dotted-quad. sk- keys do not record these —
+    their audit signal is usage/billing.
+  sources:
+  - openapi/0g-labs-router-openapi.yml
+permission_matrix:
+- scenario: Run inference
+  endpoint: POST /v1/chat/completions (and other inference endpoints)
+  api_key: allowed
+  management_key: denied
+- scenario: Read balance / usage / history
+  endpoint: GET /v1/account/*
+  api_key: denied
+  management_key: allowed
+  required_scope: account:read
+- scenario: List API keys
+  endpoint: GET /v1/api-keys
+  api_key: denied
+  management_key: allowed
+  required_scope: keys:read
+- scenario: Create API key
+  endpoint: POST /v1/api-keys
+  api_key: denied
+  management_key: allowed
+  required_scope: keys:create
+- scenario: Edit / revoke API key
+  endpoint: PATCH or DELETE /v1/api-keys/{keyId}
+  api_key: denied
+  management_key: allowed
+  required_scope: keys:manage
+- scenario: Manage management keys
+  endpoint: ANY /v1/management-keys/*
+  api_key: denied
+  management_key: denied
+  required: wallet JWT (sign-in session) only
+  rationale: >-
+    A leaked mk- cannot mint replacements for itself. keys:manage and keys:create are also
+    deliberately split so an audit integration can revoke a compromised key without being able
+    to issue a new one.
+unauthenticated_endpoints:
+- GET /v1/models
+- GET /v1/providers
+- GET /v1/service-types
+guidance:
+- Never ship either key to a browser — proxy client requests through your own backend.
+- One key per deployment so a revocation is scoped to one service.
+- Least privilege for mk-; rotate by issuing a replacement and revoking the old key.
+breaking_change:
+  observed: '2026-08-05'
+  detail: >-
+    sk- keys no longer have access to /v1/account/* (balance, usage, history). Existing
+    dashboard/billing code must move to an mk- key with the account:read scope.
+  source: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/authentication

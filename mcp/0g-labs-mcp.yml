@@ -1,0 +1,159 @@
+generated: '2026-08-05'
+method: derived
+status: candidate
+source: openapi/0g-labs-router-openapi.yml
+search_result:
+  official_hosted_server: none
+  probes:
+  - url: https://mcp.0g.ai/mcp
+    method: POST tools/list
+    status: 000
+    note: host does not resolve
+  - url: https://router-api.0g.ai/mcp
+    method: POST tools/list
+    status: 404
+  - url: https://docs.0g.ai/mcp
+    method: POST tools/list
+    status: 404
+  third_party:
+  - name: 0G MCP Server
+    author: Econyx-ai
+    url: https://glama.ai/mcp/servers/@Econyx-ai/0g-mcp-server
+    scope: 0G documentation and code examples
+    first_party: false
+    note: >-
+      Community-built and not operated by 0G Labs. Recorded for completeness only; it does not
+      count as a provider-published MCP surface.
+  finding: >-
+    0G's answer to agent tooling is Agent Skills, not MCP. It publishes 14 SKILL.md files plus
+    an AGENTS.md orchestration guide (github.com/0gfoundation/0g-agent-skills) and a second
+    package at 0g-compute-skills — see skills/_index.yml. The tool list below is a CANDIDATE
+    derived from the OpenAPI so the crosswalk has something to bind to; 0G does not publish it.
+server:
+  name: 0g-router
+  transport: http
+  url: null
+tools:
+- name: list_models
+  description: >-
+    Browse the live 0G Compute model catalog — id, context window, supported parameters and
+    formats, TEE attestation, provider count, and per-token pricing in both raw neurons and USD.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /models
+  proposed_operation_id: listModels
+  auth: none
+- name: list_providers
+  description: >-
+    List the on-chain providers currently serving a model, with health, latency, TEE
+    acknowledgement and per-provider pricing.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /providers
+  proposed_operation_id: listProviders
+  auth: none
+- name: list_service_types
+  description: List the service classes the network serves (chatbot, speech-to-text, text-to-image, video-generation).
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /service-types
+  proposed_operation_id: listServiceTypes
+  auth: none
+- name: preview_routing
+  description: >-
+    Dry-run which provider a request and its X-0G-Provider-* preferences would select, without
+    running or paying for the inference.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /routing/preview
+  proposed_operation_id: previewRouting
+  auth: sk-
+- name: create_chat_completion
+  description: OpenAI-compatible chat completion with streaming, tool calling, JSON mode and reasoning tokens.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /chat/completions
+  proposed_operation_id: createChatCompletion
+  auth: sk-
+- name: create_anthropic_message
+  description: Anthropic Messages-shaped completion, for models whose supported_formats include it.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /messages
+  proposed_operation_id: createAnthropicMessage
+  auth: sk-
+- name: transcribe_audio
+  description: Speech-to-text via the OpenAI-compatible transcription endpoint (multipart).
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /audio/transcriptions
+  proposed_operation_id: createAudioTranscription
+  auth: sk-
+- name: generate_image
+  description: Synchronous OpenAI-compatible image generation.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /images/generations
+  proposed_operation_id: createImageGeneration
+  auth: sk-
+- name: edit_image
+  description: Synchronous image edit from a supplied source image (multipart).
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /images/edits
+  proposed_operation_id: createImageEdit
+  auth: sk-
+- name: submit_async_image_generation
+  description: Submit an image generation job and poll for the result.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /async/images/generations
+  proposed_operation_id: submitAsyncImageGeneration
+  auth: sk-
+- name: submit_async_image_edit
+  description: Submit an image edit job and poll for the result.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /async/images/edits
+  proposed_operation_id: submitAsyncImageEdit
+  auth: sk-
+- name: submit_video_generation
+  description: Submit an async video generation job. size names a resolution tier; seconds is clamped to the model range.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /videos
+  proposed_operation_id: submitVideoGeneration
+  auth: sk-
+- name: get_video_job
+  description: Poll an async video job for status and its billing trace.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /videos/{id}
+  proposed_operation_id: getVideoJob
+  auth: sk-
+- name: download_video_content
+  description: Download the rendered clip for a completed video job.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /videos/{id}/content
+  proposed_operation_id: downloadVideoContent
+  auth: sk-
+- name: get_account
+  description: Read account metadata — wallet address, created_at, onboarded_at.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /account
+  proposed_operation_id: getAccount
+  auth: mk- (account:read)
+- name: get_account_funds
+  description: >-
+    One aggregated display balance across the Router ledger and the Payment Layer vault. May be
+    negative when the account owes the Router.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /account/funds
+  proposed_operation_id: getAccountFunds
+  auth: mk- (account:read)
+- name: get_usage_history
+  description: Paginated per-request usage rows — model, provider address, token counts, cost, request_id.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /account/usage/history
+  proposed_operation_id: getUsageHistory
+  auth: mk- (account:read)
+- name: get_usage_stats
+  description: Rolled-up usage statistics for the account.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /account/usage/stats
+  proposed_operation_id: getUsageStats
+  auth: mk- (account:read)
+- name: get_daily_usage
+  description: Usage bucketed by day.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /account/usage/daily
+  proposed_operation_id: getDailyUsage
+  auth: mk- (account:read)
+- name: list_api_keys
+  description: List sk- API keys with labels, created-at and last-used.
+  source_operation: openapi/0g-labs-router-openapi.yml#GET /api-keys
+  proposed_operation_id: listApiKeys
+  auth: mk- (keys:read)
+- name: create_api_key
+  description: Issue a new sk- API key. The secret is returned once.
+  source_operation: openapi/0g-labs-router-openapi.yml#POST /api-keys
+  proposed_operation_id: createApiKey
+  auth: mk- (keys:create)
+- name: update_api_key
+  description: Edit an API key's label or state.
+  source_operation: openapi/0g-labs-router-openapi.yml#PATCH /api-keys/{keyId}
+  proposed_operation_id: updateApiKey
+  auth: mk- (keys:manage)
+- name: revoke_api_key
+  description: Revoke an API key immediately.
+  source_operation: openapi/0g-labs-router-openapi.yml#DELETE /api-keys/{keyId}
+  proposed_operation_id: revokeApiKey
+  auth: mk- (keys:manage)
