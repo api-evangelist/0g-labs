@@ -58,61 +58,14 @@ tags:
 - agent-native
 - crypto-infrastructure
 apis:
-- name: 0G Compute Router API
-  description: >-
-    OpenAI- and Anthropic-compatible API gateway sitting in front of the entire 0G Compute Provider
-    network. One endpoint and one API key reach every model: chat completions (streaming, tool
-    calling, JSON mode, reasoning tokens), the Anthropic /messages shape, synchronous and
-    asynchronous image generation and edits, audio transcription, video generation, plus catalogs
-    for models, providers and service types, a routing preview, account balance/usage reads and
-    API-key management. Routing is controlled with X-0G-Provider-* headers (sort by latency or
-    price, cap price, or pin a provider address), and responses can be TEE-verified on request.
-  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
-  baseURL: https://router-api.0g.ai/v1
-  tags:
-  - artificial-intelligence
-  - ai-inference
-  - llm
-  - openai-compatible
-  - gpu-compute
-  - decentralized-compute
-  - trusted-execution-environment
-  - agent-native
-  properties:
-  - type: OpenAPI
-    url: openapi/0g-labs-router-openapi.yml
-  - type: APIReference
-    url: https://0gfoundation.github.io/0g-router/
-  - type: Documentation
-    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
-  - type: GettingStarted
-    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
-  - type: Authentication
-    url: authentication/0g-labs-authentication.yml
-  - type: Conventions
-    url: conventions/0g-labs-conventions.yml
-  - type: Idempotency
-    url: conventions/0g-labs-conventions.yml
-  - type: ErrorCatalog
-    url: errors/0g-labs-problem-types.yml
-  - type: RateLimits
-    url: rate-limits/0g-labs-rate-limits.yml
-  - type: DataModel
-    url: data-model/0g-labs-data-model.yml
-  - type: Overlay
-    url: overlays/0g-labs-router-overlay.yaml
-  - type: MCPServer
-    url: mcp/0g-labs-mcp.yml
-  - type: ToolCrosswalk
-    url: mcp/0g-labs-tool-crosswalk.yml
 - name: 0G Chain JSON-RPC
   description: >-
-    Ethereum-compatible JSON-RPC endpoint for the 0G Chain mainnet ("Aristotle", chain ID 16661),
-    an AI-focused Layer 1 with sub-second finality. Standard EVM methods (eth_chainId, eth_call,
-    eth_sendRawTransaction, …) work unchanged with Hardhat, Foundry, Truffle, ethers.js and viem.
-    Chain-specific surface is exposed through precompiles — DASigners at 0x…1000 for data-availability
-    signer registration and quorum queries, and Wrapped0GBase at 0x…1001 for wrapping the native
-    token as ERC-20 — plus staking and validator contract interfaces.
+    Ethereum-compatible JSON-RPC endpoint for the 0G Chain mainnet ("Aristotle", chain ID 16661), an AI-focused
+    Layer 1 with sub-second finality. Standard EVM methods (eth_chainId, eth_call, eth_sendRawTransaction,
+    …) work unchanged with Hardhat, Foundry, Truffle, ethers.js and viem. Chain-specific surface is exposed
+    through precompiles — DASigners at 0x…1000 for data-availability signer registration and quorum queries,
+    and Wrapped0GBase at 0x…1001 for wrapping the native token as ERC-20 — plus staking and validator
+    contract interfaces.
   humanURL: https://docs.0g.ai/developer-hub/mainnet/mainnet-overview
   baseURL: https://evmrpc.0g.ai
   tags:
@@ -128,19 +81,18 @@ apis:
     url: https://chainscan.0g.ai
 - name: 0G DA (Data Availability) gRPC
   description: >-
-    gRPC surface for the 0G data-availability layer. The Disperser service accepts blobs
-    asynchronously (DisperseBlob), exposes polling for processing state (GetBlobStatus) and
-    retrieval of a previously dispersed blob (RetrieveBlob); the Retriever service reads blobs
-    back from the DA nodes; and the node-side Signer service handles BatchSign, BatchRetrieve
-    and GetStatus. Rollups settle against this layer — OP Stack, Arbitrum Nitro, EigenLayer AVS
-    and Babylon AVS integrations are all documented.
+    gRPC surface for the 0G data-availability layer. The Disperser service accepts blobs asynchronously
+    (DisperseBlob), exposes polling for processing state (GetBlobStatus) and retrieval of a previously
+    dispersed blob (RetrieveBlob); the Retriever service reads blobs back from the DA nodes; and the node-side
+    Signer service handles BatchSign, BatchRetrieve and GetStatus. Rollups settle against this layer —
+    OP Stack, Arbitrum Nitro, EigenLayer AVS and Babylon AVS integrations are all documented.
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/da-integration
   x-deployment: self-hosted
   x-baseurl-note: >-
-    0G hosts no public DA endpoint — a DA Client, Encoder and Retriever are run by the
-    integrator (the docs default the client server to 127.0.0.1:51001, and the container
-    publishes port 51001). No baseURL is recorded rather than pointing one at a docs page or a
-    localhost address; the contract here is the protobuf, not a vendor-operated endpoint.
+    0G hosts no public DA endpoint — a DA Client, Encoder and Retriever are run by the integrator (the
+    docs default the client server to 127.0.0.1:51001, and the container publishes port 51001). No baseURL
+    is recorded rather than pointing one at a docs page or a localhost address; the contract here is the
+    protobuf, not a vendor-operated endpoint.
   tags:
   - data-availability
   - blockchain
@@ -160,11 +112,10 @@ apis:
     url: https://github.com/0gfoundation/0g-da-client
 - name: 0G Storage Indexer
   description: >-
-    Indexer service for the 0G Storage network. It locates the storage nodes holding a file's
-    segments, brokers uploads and downloads addressed by Merkle root hash, and handles the on-chain
-    Flow contract interaction internally for SDK callers. Reached through the Go and TypeScript
-    storage SDKs, the 0g-storage-client CLI, and a REST gateway mode on the CLI; the mainnet
-    indexer is indexer-storage-turbo.0g.ai.
+    Indexer service for the 0G Storage network. It locates the storage nodes holding a file's segments,
+    brokers uploads and downloads addressed by Merkle root hash, and handles the on-chain Flow contract
+    interaction internally for SDK callers. Reached through the Go and TypeScript storage SDKs, the 0g-storage-client
+    CLI, and a REST gateway mode on the CLI; the mainnet indexer is indexer-storage-turbo.0g.ai.
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk
   baseURL: https://indexer-storage-turbo.0g.ai
   tags:
@@ -181,12 +132,198 @@ apis:
     url: https://github.com/0gfoundation/0g-storage-client
   - type: Explorer
     url: https://storagescan.0g.ai
+- aid: 0g-labs:0g-labs-account-api
+  name: 0G Labs Account API
+  description: The Account API from 0G Labs — 5 operation(s) for account.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - Account
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-account-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
+- aid: 0g-labs:0g-labs-api-key-api
+  name: 0G Labs API Key API
+  description: The API Key API from 0G Labs — 2 operation(s) for api key.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - API Key
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-api-key-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
+- aid: 0g-labs:0g-labs-inference-api
+  name: 0G Labs Inference API
+  description: The Inference API from 0G Labs — 11 operation(s) for inference.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - Inference
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-inference-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
+- aid: 0g-labs:0g-labs-models-api
+  name: 0G Labs Models API
+  description: The Models API from 0G Labs — 1 operation(s) for models.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-models-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
+- aid: 0g-labs:0g-labs-provider-api
+  name: 0G Labs Provider API
+  description: The Provider API from 0G Labs — 1 operation(s) for provider.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - Provider
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-provider-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
+- aid: 0g-labs:0g-labs-service-types-api
+  name: 0G Labs Service Types API
+  description: The Service Types API from 0G Labs — 1 operation(s) for service types.
+  humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  baseURL: https://router-api.0g.ai/v1
+  tags:
+  - Service Types
+  properties:
+  - type: OpenAPI
+    url: openapi/0g-labs-service-types-api-openapi.yml
+  - type: APIReference
+    url: https://0gfoundation.github.io/0g-router/
+  - type: Documentation
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
+  - type: GettingStarted
+    url: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/quickstart
+  - type: Authentication
+    url: authentication/0g-labs-authentication.yml
+  - type: Conventions
+    url: conventions/0g-labs-conventions.yml
+  - type: Idempotency
+    url: conventions/0g-labs-conventions.yml
+  - type: ErrorCatalog
+    url: errors/0g-labs-problem-types.yml
+  - type: RateLimits
+    url: rate-limits/0g-labs-rate-limits.yml
+  - type: DataModel
+    url: data-model/0g-labs-data-model.yml
+  - type: ToolCrosswalk
+    url: mcp/0g-labs-tool-crosswalk.yml
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: IssueTracker
+  url: https://github.com/0gfoundation/0g-da-client/issues
+- type: Releases
+  url: https://github.com/0gfoundation/0g-da-client/releases
+- type: ContributionGuide
+  url: https://github.com/0gfoundation/0g-da-client/blob/main/contributing.md
 - type: Website
   url: https://0g.ai
 - type: DeveloperPortal
@@ -216,7 +353,7 @@ common:
 - type: LLMsTxt
   url: llms/0g-labs-llms.txt
 - type: OpenAPI
-  url: openapi/0g-labs-router-openapi.yml
+  url: openapi/_original/0g-labs-router-openapi.yml
 - type: Packages
   url: packages/0g-labs-packages.yml
 - type: SDKs
