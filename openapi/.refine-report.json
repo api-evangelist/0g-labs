@@ -1,0 +1,32 @@
+{
+  "provider": "0g-labs",
+  "sources": [
+    "0g-labs-account-api-openapi.yml",
+    "0g-labs-api-key-api-openapi.yml",
+    "0g-labs-inference-api-openapi.yml",
+    "0g-labs-models-api-openapi.yml",
+    "0g-labs-provider-api-openapi.yml",
+    "0g-labs-service-types-api-openapi.yml"
+  ],
+  "outputs": [
+    "0g-labs-account-api-openapi.yml",
+    "0g-labs-api-key-api-openapi.yml",
+    "0g-labs-inference-api-openapi.yml",
+    "0g-labs-models-api-openapi.yml",
+    "0g-labs-provider-api-openapi.yml",
+    "0g-labs-service-types-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [
+    "0g-labs-account-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "0g-labs-api-key-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "0g-labs-inference-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "0g-labs-models-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "0g-labs-provider-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "0g-labs-service-types-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": []
+}

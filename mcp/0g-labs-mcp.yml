@@ -7,7 +7,7 @@ search_result:
   probes:
   - url: https://mcp.0g.ai/mcp
     method: POST tools/list
-    status: 000
+    status: 0
     note: host does not resolve
   - url: https://router-api.0g.ai/mcp
     method: POST tools/list
@@ -21,30 +21,26 @@ search_result:
     url: https://glama.ai/mcp/servers/@Econyx-ai/0g-mcp-server
     scope: 0G documentation and code examples
     first_party: false
-    note: >-
-      Community-built and not operated by 0G Labs. Recorded for completeness only; it does not
-      count as a provider-published MCP surface.
-  finding: >-
-    0G's answer to agent tooling is Agent Skills, not MCP. It publishes 14 SKILL.md files plus
-    an AGENTS.md orchestration guide (github.com/0gfoundation/0g-agent-skills) and a second
-    package at 0g-compute-skills — see skills/_index.yml. The tool list below is a CANDIDATE
-    derived from the OpenAPI so the crosswalk has something to bind to; 0G does not publish it.
+    note: Community-built and not operated by 0G Labs. Recorded for completeness only; it does not count
+      as a provider-published MCP surface.
+  finding: 0G's answer to agent tooling is Agent Skills, not MCP. It publishes 14 SKILL.md files plus
+    an AGENTS.md orchestration guide (github.com/0gfoundation/0g-agent-skills) and a second package at
+    0g-compute-skills — see skills/_index.yml. The tool list below is a CANDIDATE derived from the OpenAPI
+    so the crosswalk has something to bind to; 0G does not publish it.
 server:
   name: 0g-router
   transport: http
   url: null
 tools:
 - name: list_models
-  description: >-
-    Browse the live 0G Compute model catalog — id, context window, supported parameters and
+  description: Browse the live 0G Compute model catalog — id, context window, supported parameters and
     formats, TEE attestation, provider count, and per-token pricing in both raw neurons and USD.
   source_operation: openapi/0g-labs-router-openapi.yml#GET /models
   proposed_operation_id: listModels
   auth: none
 - name: list_providers
-  description: >-
-    List the on-chain providers currently serving a model, with health, latency, TEE
-    acknowledgement and per-provider pricing.
+  description: List the on-chain providers currently serving a model, with health, latency, TEE acknowledgement
+    and per-provider pricing.
   source_operation: openapi/0g-labs-router-openapi.yml#GET /providers
   proposed_operation_id: listProviders
   auth: none
@@ -54,14 +50,14 @@ tools:
   proposed_operation_id: listServiceTypes
   auth: none
 - name: preview_routing
-  description: >-
-    Dry-run which provider a request and its X-0G-Provider-* preferences would select, without
+  description: Dry-run which provider a request and its X-0G-Provider-* preferences would select, without
     running or paying for the inference.
   source_operation: openapi/0g-labs-router-openapi.yml#POST /routing/preview
   proposed_operation_id: previewRouting
   auth: sk-
 - name: create_chat_completion
-  description: OpenAI-compatible chat completion with streaming, tool calling, JSON mode and reasoning tokens.
+  description: OpenAI-compatible chat completion with streaming, tool calling, JSON mode and reasoning
+    tokens.
   source_operation: openapi/0g-labs-router-openapi.yml#POST /chat/completions
   proposed_operation_id: createChatCompletion
   auth: sk-
@@ -96,7 +92,8 @@ tools:
   proposed_operation_id: submitAsyncImageEdit
   auth: sk-
 - name: submit_video_generation
-  description: Submit an async video generation job. size names a resolution tier; seconds is clamped to the model range.
+  description: Submit an async video generation job. size names a resolution tier; seconds is clamped
+    to the model range.
   source_operation: openapi/0g-labs-router-openapi.yml#POST /videos
   proposed_operation_id: submitVideoGeneration
   auth: sk-
@@ -116,9 +113,8 @@ tools:
   proposed_operation_id: getAccount
   auth: mk- (account:read)
 - name: get_account_funds
-  description: >-
-    One aggregated display balance across the Router ledger and the Payment Layer vault. May be
-    negative when the account owes the Router.
+  description: One aggregated display balance across the Router ledger and the Payment Layer vault. May
+    be negative when the account owes the Router.
   source_operation: openapi/0g-labs-router-openapi.yml#GET /account/funds
   proposed_operation_id: getAccountFunds
   auth: mk- (account:read)
@@ -157,3 +153,9 @@ tools:
   source_operation: openapi/0g-labs-router-openapi.yml#DELETE /api-keys/{keyId}
   proposed_operation_id: revokeApiKey
   auth: mk- (keys:manage)
+deployment:
+  mode: none
+  verified: derived
+  tools: 23
+  checked: '2026-08-12'
+  source: catalog MCP census

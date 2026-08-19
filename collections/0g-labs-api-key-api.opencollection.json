@@ -1,0 +1,118 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router API Key API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "API Key",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get API key list",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/api-keys",
+            "params": [
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter: active / revoked / expired / all (default all)"
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Get all API keys for current user"
+        },
+        {
+          "info": {
+            "name": "Create API key",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/api-keys",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Create a new API key for LLM service access"
+        },
+        {
+          "info": {
+            "name": "Update API key",
+            "type": "http"
+          },
+          "http": {
+            "method": "PATCH",
+            "url": "/v1/api-keys/:keyId",
+            "params": [
+              {
+                "name": "keyId",
+                "value": "",
+                "type": "path",
+                "description": "API Key ID"
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Update name / credit_limit / reset_period / expiration of an API key"
+        },
+        {
+          "info": {
+            "name": "Revoke API key",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "/v1/api-keys/:keyId",
+            "params": [
+              {
+                "name": "keyId",
+                "value": "",
+                "type": "path",
+                "description": "API Key ID"
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Revoke a specific API key"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

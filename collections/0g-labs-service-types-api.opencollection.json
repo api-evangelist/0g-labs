@@ -1,0 +1,29 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router Service Types API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Service Types",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get available service types",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/service-types"
+          },
+          "docs": "Get service types that have at least one TEE-acknowledged provider (health is not a filter — a service type stays listed even when its providers are temporarily unhealthy)"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

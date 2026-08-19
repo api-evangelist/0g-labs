@@ -1,0 +1,1582 @@
+openapi: 3.2.0
+info:
+  description: '0G Router is an API gateway between users and the decentralized 0G Compute Provider network.
+
+    It provides unified access, fee collection, and intelligent routing for AI inference services.
+
+
+    ## Balance model: Router ledger vs Payment Layer vault
+
+
+    User funds live in the shared 0G Payment Layer (PL) vault — a multi-app funding pool that other 0G products also draw from. Router does not drain a user''s full vault balance up front; it pulls small amounts on demand into its own ledger as inference is consumed.
+
+
+    As a result, the `/v1/account/balance` endpoint returns the **Router ledger only** (`deposit_balance + credit_balance`). It deliberately excludes the PL vault, because vault balance is shared across consumer apps and is not yet committed to Router.
+
+
+    ### Picking an endpoint: `/balance` vs `/funds`
+
+
+    If you just want one **display** balance that already combines both sides, call `/v1/account/funds`. Router does the aggregation server-side and returns a net `total` = `(deposit + credit − pending_charge) + vault_balance`, plus the breakdown. Unlike `/balance`''s `total_balance` (Router-ledger-only, always `≥ 0`), `/funds.total` includes the full vault and **may be negative** when the user owes Router (`pending_charge` exceeds available funds) — render that as "owed to Router".
+
+
+    Use `/v1/account/balance` (not `/funds`) for settlement / SDK / mgmt-key integrations that depend on the Router-ledger-only, `≥ 0` figure. And note `/funds.total` is a wallet-**display** number: it is **not** the admission figure — the "can I submit a request" calculation below applies `vault_ratio` and is computed separately.
+
+
+    ### Admission rule
+
+
+    An inference request is admitted whenever either side has enough funds:
+
+
+    - Router ledger covers `min_cost`, **or**
+
+    - `vault_balance × vault_ratio − pending_charge >= min_cost` (deferred path; the shortfall is recorded as `pending_charge` and cleared from the next PL pull).
+
+
+    Otherwise the request returns `402 insufficient_balance`.
+
+
+    ### Auto-pull from the vault (mainnet values)
+
+
+    After a user''s **first successful inference charge**, the account becomes pull-eligible. A background worker then keeps the Router ledger topped up from the PL vault:
+
+
+    | Parameter | Mainnet value | Meaning |
+
+    |---|---|---|
+
+    | Scan interval | 3 s | How often Router checks each pull-eligible account |
+
+    | Low watermark | 0.1 0G | Pull triggers when effective Router balance drops below this |
+
+    | High watermark | 0.5 0G | Target balance after a pull (≈ amount pulled per cycle) |
+
+    | Vault ratio | 0.5 | Only 50% of the PL vault counts toward admission (safety margin for the shared pool) |
+
+    | min_cost | 0.01 0G | Minimum cost a single request must be able to cover |
+
+
+    Accounts that have only deposited to the vault but never sent an inference request will not trigger a pull.
+
+
+    ### Predicting "can submit" on the client
+
+
+    To gate a submit button before the first request, combine both sides:
+
+
+    ```
+
+    available = router.total_balance + max(0, vault_balance × vault_ratio − pending_charge)
+
+    ```
+
+
+    Use `vault_ratio` from the table above (`0.5` on mainnet). Allow submission when `available > 0`. There is no need to mirror the `min_cost` floor on the client — Router enforces it at admission time and returns `402` if the request cannot be covered.
+
+
+    ## Changelog
+
+
+    `### Unreleased` lists API changes merged but not yet live on mainnet; on release each is cut into a dated `### vX.Y — YYYY-MM` section. Endpoint and field stability is marked inline with `[beta]`.
+
+
+    ### Unreleased
+
+    - **`POST /v1/messages` — a model that does not speak the Anthropic wire format now returns `400`, not `503`** — asking `/v1/messages` for a model whose endpoints only serve the OpenAI format used to fail with `503 "No available providers for this request"`, byte-for-byte the error a real outage returns. Since SDKs treat `5xx` as retryable and `4xx` as final, a Messages-API-only client spent its whole retry budget on a request no retry can satisfy — the mismatch is permanent — and then surfaced it as an outage rather than as "use the other endpoint". It is now a `400 invalid_request_error` naming the model and the formats it does serve: `model "some-model" is not available on the anthropic API format (supported: openai); use POST /v1/chat/completions instead`. **If you branch on status codes, add a `400` arm here** — this condition previously arrived as `503`. Check a model''s formats up front via `supported_formats` on `GET /v1/models`. Unchanged: a genuine supply outage still returns `503`, an unknown model still `404`, and a model reachable on the Anthropic format routes exactly as before.
+
+    - **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions` — the `ZG-Res-Key` response header now carries the PROVIDER''s response id, passed through verbatim, instead of a router-generated value** — it lets a client independently verify the provider''s TEE signature for that specific response against the provider''s signature endpoint. Two behavioural notes: it is now **present only when the provider returns one** (the router previously always emitted a value), so treat its absence as "no provider response id available" rather than an error; and its value is the provider''s own — opaque and provider-scoped, not a router-owned token. The router''s own stable, always-present per-response identifier is unchanged: read **`X-Request-ID`** (echoed on every response, and the value recorded in your usage history) when you need a handle the router will recognise. No request contract change.
+
+    - **`POST /v1/videos`, `GET /v1/models` — documented: `size` and `seconds` do not mean what the OpenAI Video API means by them** — no behaviour change; the behaviour was undocumented and reads as a bug when you meet it. The request shape is OpenAI''s, but the models behind it are not, and where a model''s own limits differ they win. **`size` names a resolution TIER, not output dimensions**, because a video model advertises the tiers it is PRICED at rather than arbitrary sizes. Two spellings are accepted and they are not equivalent: **pixel dimensions** (`1280x720` — OpenAI''s spelling, and what an SDK sends) select the **aspect ratio only, and only for text-to-video**, so asking a 2K-only model for `1280x720` returns a **2560x1440** clip billed at the 2K rate rather than a 720p one; for **image-to-video they have no effect at all**, since the aspect ratio follows your reference image (a tier name still selects the tier there). **A tier name** (`2K`) addresses the tier directly — send only names that appear in that list, since it is the set we can price and it grows as a model adds tiers. Pixel dimensions are the safe thing to send blind; a tier name is what to send when you must have a specific tier. Read the tiers from `pricing.variants[].dimensions.resolution` on `GET /v1/models`. **`seconds` is clamped to the model''s supported range in BOTH directions, silently**: below the minimum you get and pay for the minimum, above the maximum you get the maximum, and neither errors — so a request outside the range costs something other than what you asked for. Omitting either field is the recommended default. For both, the **submit** response echoes what you sent while the **poll** response reports what was actually rendered, so reconcile against the poll. Per-model limits (supported range, tiers, prompt length, accepted reference-image formats and dimensions) are stated in each model''s `description`; a request that violates one is rejected by the model provider, so that error text and any numeric code in it are theirs. Billing is unaffected throughout — you are billed for the clip actually produced, at the per-second price published for its tier. **[beta]**
+
+    - **`GET /v1/videos/{id}`, `GET /v1/async/jobs/{id}` — fixed: `x_0g_trace.billing` on a re-poll now reports the amount you were CHARGED, not a fresh quote** — an async job''s trace is returned on every poll, not only the one that settles the charge. Polls after settlement were re-deriving the fee at the CURRENT price instead of reading the booked figure, so the reported cost could drift away from the charge over time. It drifts whenever the provider prices in USD, because its native-token rate is derived from a moving FX pair: one clip''s trace read `6794472400000000000` when it settled and `6696290550000000000` five hours later, a 1.45% gap against a charge that had not changed. **No money was ever wrong** — the ledger, `GET /v1/account/usage/history` and your balance always agreed, and every one of them still does — but the trace is what many clients reconcile spend against, so it now carries the booked amount. The wire shape is unchanged (`input_cost` / `output_cost` / `total_cost`, `currency` on USD traces), and the settling poll is unaffected: it already reported the charge it had just written. Reconciling off `GET /v1/account/usage/history` was, and remains, the authoritative route. If the booked figure cannot be read the response falls back to the previous behaviour rather than failing your poll.
+
+    - **`POST /v1/videos`, `GET /v1/videos/{id}`, `GET /v1/videos/{id}/content` — async video generation** — three new endpoints add video as a modality, in the OpenAI Video API shape. `POST /v1/videos` accepts `{model, prompt, seconds, size}` as JSON or as `multipart/form-data` (so an uploaded first-frame image can drive image-to-video) and returns `{id, status, provider_address}`; `GET /v1/videos/{id}` reports status and is what settles the charge once the job completes; `GET /v1/videos/{id}/content` streams the finished file. On both `GET`s **`provider_address` is optional** — it is resolved from the job id — so an OpenAI-native client can poll and download with no query parameters. Because generation takes minutes, billing happens at completion rather than at submit, and on the **duration actually delivered** — your requested `seconds` becomes the billing basis only when the provider''s own figure is unusable — it completed the job but reported no duration at all (so that a delivered clip is never served free), or it reported one implausibly larger than you asked for, which is capped. Both cases are logged as degraded. The cap bounds the DURATION at a small multiple of what you requested, not the fee: on a `video_clip` table the price is a step function of duration, so a capped duration can still land on a dearer row than the one you asked for. The same precedence applies to `size`: the resolution the price is keyed on is the one the provider reports, falling back to the `size` you asked for when the provider does not echo it, which is the normal case for some upstreams — so a resolution-priced model is billed at its own tier rather than at the table''s most expensive one. Two consequences worth coding against: the content endpoint **charges before it streams** if you never polled, so bytes are never delivered unbilled; and each account may hold only a small number of unfinished video jobs at once, so a submit can return **`429`** with code `video_jobs_in_flight_limit` while earlier clips are still rendering. **`seconds` is REQUIRED** — the one place this endpoint deviates from the upstream OpenAI Video API, where it is optional. Billing is per delivered second and the delivered figure comes from the provider, so your declared duration is the only reference the router can sanity-check it against; without one, a provider misreporting its units could charge orders of magnitude more. Omitting it returns `400` `invalid_request` with "seconds is required" — note this applies to the OpenAI SDK path too, including multipart image-to-video. A `seconds` value the model has no price for is likewise rejected up front with `400` and the list of durations that are available, rather than failing after the clip was generated. Other job states: **`404`** `async_job_not_found` on either `GET` means this router has no such job id — it never existed, or you pinned a `provider_address` other than the one that owns it — so re-check the id (and drop the pin, since it is resolved for you) rather than retrying; **`409`** `video_not_ready` from the content endpoint means keep polling; **`424`** `video_job_failed` means the job died at the provider and has no output. A USD-settling account can use video only when the model publishes a USD video price (`pricing_usd.video` or `pricing_usd.variants`); otherwise submit returns `501` `usd_not_supported` rather than a mis-priced charge. **[beta]**
+
+    - **`GET /v1/account/usage/history` — `request_id` VALUE format differs for VIDEO usage rows** — the `request_id` on a usage row for a video job is `async-<16 hex>-<job id>`, while every other async modality uses `async-<8 chars of the provider address>-<job id>`. The field, its type and the `async-` prefix are unchanged, so a `LIKE ''async-%''` filter or an exact-match lookup still behaves identically. Only one thing breaks: if you PARSE the middle segment expecting the provider''s address suffix, it will not match on a video row — read `provider_address` from the row itself instead, which is the stable way to get it for every modality. Nothing else about the field changed, and no other endpoint''s `request_id` changed. **[beta]**
+
+    - **`GET /v1/models`, `GET /v1/providers` — `pricing.video` and `pricing.variants`; `GET /v1/service-types` — `video-generation`** — the pricing object gains **`video`**, the flat price per generated second for a single-rate video model, and **`variants`**, a list of priced request shapes for a model whose price depends on the shape of the request rather than a single rate. Each variant carries `dimensions` (the axes it is keyed on, e.g. `{"resolution":"2K","duration_seconds":"5"}`), `unit` — **`video_second`** (multiply `unit_price` by the generated seconds) or **`video_clip`** (`unit_price` is the whole-clip total) — and `unit_price`, which is always the final per-unit price and never a multiplier to apply yourself. When `variants` is present, use it, and note that a table has one of two shapes, with different fallback rules for a request it does not name. The shape is told by the `dimensions` keys, not by `unit`. A **resolution-only** table (rows keyed on `{"resolution": ...}`) keeps `video` published: it is the rate for any resolution the table does NOT list, so match your resolution against `variants`, else use `video` × seconds. A **bucketed** table (rows keyed on `{"resolution", "duration_seconds"}`) omits `video`, because it is never the basis there, and a request the table does not name exactly is billed off the table itself — the row for **your resolution with the smallest `duration_seconds` that is still ≥ your clip''s duration**, and if no row at your resolution covers it (or your resolution has no rows at all) the **highest-priced row in the whole table**. That last case can therefore be much dearer than the shape you asked for; it means the operator has not tabulated what you requested, and the router counts it so they can. A model with no `variants` at all bills `video` × generated seconds. Resolution matching is case- and whitespace-insensitive on our side. Duration here is the length actually delivered, which for a request carrying a reference image or video is the vendor''s billed length (input + output) and so can exceed the `seconds` you asked for. `GET /v1/service-types` lists `video-generation` / "Video Generation" once a video provider is on the network. **Purely additive — no existing field changes.** A video-generation model still reports `prompt` / `completion`, unchanged. Note these are only per-TOKEN prices for chat: on every other modality `completion` is an echo of the on-chain output price whose meaning follows the modality — per image for `text-to-image` / `image-editing` (which is why `image` exists), and per generated second for `video-generation` (which is why `video` / `variants` exist). So compute video cost from `video` / `variants`, exactly as image cost is computed from `image`; do not multiply `completion` by a token count. One caveat specific to `variants`, because it is a whole price LIST rather than a single rate: `GET /v1/models` aggregates a model across every endpoint serving it and shows one endpoint''s block, so when two endpoints of the same model publish different tables the quote you read may not be the table the request is billed against. Endpoints are per-provider, so read `GET /v1/providers` for the exact list, or pin `provider.address` if you need the quote and the charge to be the same table. This is a general property of the aggregated view rather than something new — the shown block always comes from one endpoint, and which endpoint the request routes to depends on the routing preferences you send (`sort`, a pinned `address`) and on health — but it is worth stating for `variants` specifically, because a table is a whole price list rather than a single rate, so two endpoints can differ in the SHAPE of what they charge and not just the amount. **[beta]**
+
+
+    - **All inference endpoints — the `min_cost` admission floor rises from `0.00001 0G` to `0.01 0G`** — a request is admitted only when the account can cover `min_cost`, either from the Router ledger or through the vault deferred path (see the **Admission rule** table above, which now reads `0.01 0G`). The practical effect is that an account whose spendable balance has fallen below `0.01 0G` now receives `402` rather than being served one last request. **No balance is lost** — the remainder stays on the account and becomes spendable again on the next top-up — and accounts with vault funds are unaffected, because the vault side of the admission rule is unchanged. The old floor was low enough to be indistinguishable from zero, which let a nearly-empty account be served a request it could not pay for, leaving a debt (`pending_charge`) that the account could then only clear by funding its vault.
+
+    - **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions`, `/v1/async/images/*`, `/v1/routing/preview` — pinning a provider that doesn''t serve the requested model now returns `400`, not `500`** — when a request pins a specific provider (`provider.address` in the body or the `X-0G-Provider-Address` header) whose address exists but does not serve the requested `model` (or whose service type / API format doesn''t match the endpoint), the router now returns **`400`** with error code **`provider_model_mismatch`** instead of a generic `500` / `502`. This is a deterministic bad pin — two constraints ("use this exact provider" and "serve this model") that don''t intersect — so retrying won''t help and the response now says so, letting the caller correct the pin. An unpinned request is unaffected (it routes normally to a provider that serves the model), as is a pin that resolves to no provider at all (still `400`/`provider not found`).
+
+    - **`GET /v1/account`, `POST /v1/account/onboarded` (JWT; `GET` also accepts a management key with `account:read`) — account onboarding state** — a new endpoint pair exposes whether the authenticated wallet has handled the new-user onboarding flow. `GET /v1/account` returns account metadata `{address, created_at, onboarded_at}`, where **`onboarded_at`** is an RFC3339 timestamp once the account has completed or dismissed onboarding and **`null`** until then, so a client can decide whether to show the flow. Because the value is stored per wallet on the server (not in the browser), it persists across a cleared cache, another browser, and another device. `POST /v1/account/onboarded` records that the flow was handled, setting `onboarded_at` to the server time; it is **idempotent** — the first call stamps the timestamp and later calls (a client retry, or a "dismiss" after a "complete") leave it unchanged — so both client paths can safely call and retry it. **[beta]**
+
+    - **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions`, `/v1/async/images/*` — transient vault-check failure now returns retryable `503` instead of `402`** — a routing-mode (Payment Layer vault) user''s request is admitted by checking their on-chain vault balance. When that chain read fails transiently (RPC blip), the pre-request balance gate previously returned `402 "Insufficient balance"` — indistinguishable from a genuinely empty account, so a funded user saw "insufficient balance" and assumed their deposit was lost. It now returns **`503`** with error code **`vault_unavailable`** (OpenAI-style) / `api_error` (Anthropic-style) and is safe to retry; the next request self-heals once the RPC recovers. Behavior is still fail-closed (the request is never admitted while vault state is unknown — no unbounded deferred debt) and a genuine balance shortfall (vault read succeeds, funds insufficient) is unchanged at `402`. No request contract change.
+
+    - **All endpoints — a client-supplied `X-Request-ID` is now validated before it is echoed and recorded** — the header is still propagated as your correlation id, but only when it is at most 64 characters, built from letters, digits and `- _ . :`, and does not begin with `async-`. A value failing any of those is replaced by a server-generated id, exactly as an over-long one already was; you always get the id actually in effect back in the `X-Request-ID` response header, so read it there rather than assuming your value was kept. UUIDs, ULIDs, hex trace ids and W3C `traceparent` values are unaffected. The `async-` prefix is reserved because the router derives its own asynchronous-billing identifiers in that namespace.'
+  title: 0G Router Inference API
+  termsOfService: https://0g.ai/terms
+  contact:
+    name: 0G Labs
+    url: https://0g.ai
+    email: contact@0g.ai
+  version: '1.0'
+servers:
+- url: /v1
+tags:
+- name: Inference
+paths:
+  /async/images/edits:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Submit an image editing job to be processed asynchronously. The response includes `jobId` and `provider_address` — clients then poll `/v1/async/jobs/{jobId}` with `?provider_address=...` to retrieve the result.
+
+        Supports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`). Multipart endpoints have no body-side routing surface — headers only.'
+      tags:
+      - Inference
+      summary: Submit async image edit job
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Job submitted; response carries jobId, status, provider_address
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /async/images/generations:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Submit an image generation job to be processed asynchronously. The response includes `jobId` and `provider_address` — clients then poll `/v1/async/jobs/{jobId}` with `?provider_address=...` to retrieve the result.
+
+        **Provider Routing**: Use `"provider": {...}` body field OR `X-0G-Provider-*` request headers. Header > body precedence resolves same-field conflicts.'
+      tags:
+      - Inference
+      summary: Submit async image generation job
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest'
+      responses:
+        '202':
+          description: Job submitted; response carries jobId, status, provider_address
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /audio/transcriptions:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Transcribe audio file to text. Accepts **either** content type:
+
+        - `application/json` (default, schema below): `AudioTranscriptionRequest` body with base64-encoded audio in `file_base64`.
+
+        - `multipart/form-data` (OpenAI-style): `file` part with audio bytes + `model` form field (plus optional `language`, `response_format`). Schema not auto-documented here — matches the OpenAI `/v1/audio/transcriptions` shape.
+
+        Supports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`). Multipart requests have no body-side routing surface — headers only. JSON requests may also use the body `provider: {...}` field.'
+      tags:
+      - Inference
+      summary: Audio transcription
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionRequest'
+        description: JSON-body shape (base64-encoded audio in `file_base64`). For multipart/form-data requests, send `file` + `model` form parts instead — see description.
+        required: true
+      responses:
+        '200':
+          description: Transcription result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionResponse'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found (unknown model id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /chat/completions:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Send chat request to AI provider (OpenAI compatible API).
+
+
+        **Web Search**: Add `"plugins": [{"id": "web"}]` to enable real-time web search.
+
+        Search results are injected into the prompt context and returned as `url_citation` annotations
+
+        in the response. Works with any model. Multi-turn conversations automatically rewrite
+
+        the query for better search relevance. The injected search context tokens are billed
+
+        as normal input tokens.
+
+
+        **File Attachments**: Upload via `POST /v1/files`, then reference with
+
+        `"attachments": [{"file_id": "file-..."}]`. Extracted text is injected into the system prompt
+
+        and billed as normal input tokens.
+
+
+        **Provider Routing**: Use `"provider": {"sort": "latency"|"price", "address": "0x...", "allow_fallbacks": true}`
+
+        to influence provider selection. `address` overrides `sort`. The `X-0G-Provider-*` request headers (documented below) are the equivalent canonical surface.
+
+        **Price Ceiling** (header-only): set `X-0G-Provider-Max-Price-Usd-Prompt` / `-Completion` (USD per 1M tokens)
+
+        or `-Image` (USD per generated image). Providers above the cap are excluded before sort/fallback runs. [beta]
+
+
+        **E2EE (sealed requests)**: a 0G Private Computer sidecar may seal `messages`/`tools` into a top-level
+
+        `_e2ee` object and omit them from the cleartext body. The router detects `_e2ee`, skips the
+
+        `messages`-required check, and carries the `_e2ee` field through to the provider (which it never
+
+        reads or decrypts); `model` and response `usage` stay cleartext for routing/billing. Presence of
+
+        `_e2ee` is the only signal (no header). [beta]'
+      tags:
+      - Inference
+      summary: Chat completion
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ChatCompletionRequest'
+        description: Chat request
+        required: true
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ChatCompletionResponseWithTrace'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found (unknown model id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '502':
+          description: Provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider (model exists but unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /images/edits:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Edit an image using AI (inpainting, variations).
+
+        Supports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`). Multipart endpoints have no body-side routing surface — headers only.'
+      tags:
+      - Inference
+      summary: Image editing
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  description: Source image file
+                  type: string
+                  format: binary
+                prompt:
+                  description: Edit instruction
+                  type: string
+                model:
+                  description: Model ID
+                  type: string
+              required:
+              - prompt
+              - model
+      responses:
+        '200':
+          description: Edited image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ImageGenerationResponse'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found (unknown model id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /images/generations:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: Generate images using AI. Supports `provider` routing preferences (see /chat/completions).
+      tags:
+      - Inference
+      summary: Image generation
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        $ref: '#/components/requestBodies/github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest'
+      responses:
+        '200':
+          description: Generated image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ImageGenerationResponse'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found (unknown model id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /messages:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Send chat request using Anthropic Messages API format.
+
+        Routes to providers that support the Anthropic format.
+
+        Supports web search plugins, file attachments, and provider routing preferences
+
+        (same as `/chat/completions`).'
+      tags:
+      - Inference
+      summary: Anthropic Messages API
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicRequest'
+        description: Anthropic Messages request
+        required: true
+      responses:
+        '200':
+          description: Anthropic Messages response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicResponse'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found (unknown model id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: Refund pending
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '502':
+          description: Provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider (model exists but unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /routing/preview:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Return, in fallback order, the provider(s) the router WOULD select for a request — WITHOUT executing, billing, or mutating routing state. Built for end-to-end-encrypted (sealed) requests: a sealed request must be encrypted to a specific provider enclave before it can be sent, so a gateway calls this first (with the sensitive `messages` / prompt stripped out), seals to the head candidate, and pins the real request to it via `X-0G-Provider-Address` — falling back to the next candidate (re-sealing) on failure.
+
+
+        The body is the stripped inference request plus the control field `service_type` — the internal service type being previewed (`chatbot` | `text-to-image` | `image-editing` | `speech-to-text`). This is the SAME vocabulary returned by `GET /v1/service-types` (`.type`) and accepted by `GET /v1/providers` (`?service_type=`), so a caller discovering providers via the catalog feeds the same string straight in (it is NOT the model-modality `type` on `/v1/models`). Anthropic (`/v1/messages`) sealed requests are not supported yet, so `anthropic-chat` is not an accepted value. `model` is OPTIONAL: given, candidates are that model''s providers; omitted, candidates are ANY provider of the service type (a heterogeneous list — each candidate carries its own `canonical_id` / `model_id`). Routing preferences (`provider` / `X-0G-Provider-*`) and capability signals (`tools`, `response_format`, `max_tokens`, `reasoning_effort`) are read from the body/headers exactly as on the inference endpoints, so the previewed order matches what the request would select. The number of candidates is fixed at the router''s provider-retry budget (the length of the fallback chain the router itself would try); a smaller healthy pool returns fewer. Each candidate returns the provider `address` (to pin), its broker `endpoint` (to fetch the enclave key from), and the model it serves (`canonical_id` to put in the sealed request, `model_id` informational). A pinned `provider.address` returns just that provider. For the multipart inference endpoints (`image-editing`, `speech-to-text`) there is no JSON body to strip: synthesize this JSON body carrying `service_type` + `model` and forward routing prefs via `X-0G-Provider-*` headers — the uploaded blob (`file` / `mask`) and `prompt` need not (and should not) be included, as they are both sensitive and irrelevant to provider selection. This endpoint is in limited availability and may be unavailable (`404`) in some environments. [beta]'
+      tags:
+      - Inference
+      summary: Preview provider selection (E2EE)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/internal_handler.RoutePreviewRequest'
+        description: Preview request (stripped inference body + service_type/model)
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/internal_handler.RoutePreviewResponse'
+        '400':
+          description: Request error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: Model not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: No available provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /videos:
+    post:
+      security:
+      - ApiKeyAuth: []
+      description: 'Submit a video generation job (OpenAI Video API shape). The response includes `id` and `provider_address` — clients poll `GET /videos/{id}?provider_address=...` and download the result from `GET /videos/{id}/content?provider_address=...`.
+
+        Accepts `application/json` OR `multipart/form-data`. Use multipart to drive image-to-video: send the same fields as form values plus the reference image as a file part.
+
+        Supports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`), identical to the other inference endpoints.
+
+        The request shape is the OpenAI Video API''s, but the models behind it are not OpenAI''s, and where a model''s own limits differ from OpenAI''s they win. Those limits are per-model — read them from the model''s `description` and `pricing.variants` on `GET /v1/models` rather than assuming the OpenAI defaults — and a request that violates one is rejected by the model provider, so the error text and any numeric code in it are theirs, not ours. The two that differ most often are `size` and `seconds`.
+
+        `size` names a resolution TIER, not output dimensions, because a video model advertises the tiers it is PRICED at rather than arbitrary sizes. Two spellings are accepted and they are not equivalent. **Pixel dimensions** (`1280x720`, OpenAI''s spelling and what an SDK sends) select the ASPECT RATIO only, and only for text-to-video — the clip renders at whatever tier the model serves, so on a 2K-only model `1280x720` returns a 2560x1440 clip billed at the 2K rate, not a 720p one. For **image-to-video** the aspect ratio follows your reference image, so pixel dimensions have no effect there — a tier name still selects the tier. **A tier name** (`2K`) addresses the tier directly. Send only names that appear in that list — it is the set this endpoint can price, and it grows as a model adds tiers, so read it rather than hard-coding what a model serves today. Read the tiers from `pricing.variants[].dimensions.resolution`. Omitting `size` is the recommended default — the model''s own default tier and aspect ratio apply.
+
+        `seconds` is clamped to the model''s supported range rather than rejected, in BOTH directions and without an error: ask for less than the minimum and you get (and pay for) the minimum; ask for more than the maximum and you get the maximum. The clip you are billed for is the one actually produced, so a request outside the range costs something other than what you asked for. The range is per-model and stated in the model''s description.
+
+        For both fields the submit response echoes what you SENT, while the poll response reports what was actually rendered. Reconcile against the poll.'
+      tags:
+      - Inference
+      summary: Submit async video generation job
+      parameters:
+      - description: 'Routing: pin to a specific provider by on-chain address (0x-prefixed).'
+        name: X-0G-Provider-Address
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: provider sort strategy. `latency` | `price`.'
+        name: X-0G-Provider-Sort
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: trust tier filter (`verified` | `private`). `verified` is a floor — `private` providers also satisfy it.'
+        name: X-0G-Provider-Trust-Mode
+        in: header
+        schema:
+          type: string
+      - description: 'Routing: whether to retry on other providers after a failure. `true` | `false`. Defaults to false when an address is pinned, true otherwise.'
+        name: X-0G-Provider-Allow-Fallbacks
+        in: header
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+          multipart/form-data:
+            schema:
+              type: object
+        description: Video generation request. `model`, `prompt` and `seconds` are REQUIRED (`seconds` is optional in the upstream OpenAI Video API but mandatory here — see the changelog); `size` is optional.
+        required: true
+      responses:
+        '200':
+          description: Job submitted; response carries id, status, provider_address
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Request error — includes `seconds is required` and a `seconds` value the model has no price for (the available durations are listed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '402':
+          description: Insufficient balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: model_not_found — no provider on the network serves this model
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '423':
+          description: refund_pending — a refund is in progress for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: video_jobs_in_flight_limit — too many unfinished video jobs for this account; poll or wait for the earlier ones
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '501':
+          description: Not available in USD mode
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '503':
+          description: no_available_provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /videos/{id}:
+    get:
+      security:
+      - ApiKeyAuth: []
+      description: Return a video job's current status. When the job has completed this is also what settles the charge. `provider_address` is optional — it is resolved from the job id when omitted, so an OpenAI-native client can call `GET /videos/{id}` with no query parameters.
+      tags:
+      - Inference
+      summary: Poll async video generation job
+      parameters:
+      - description: Video job id returned by POST /videos
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Pin the provider that owns this job; resolved from the job id when omitted
+        name: provider_address
+        in: query
+        schema:
+          type: string
+      - description: Verify the provider's TEE signature and include the trace
+        name: verify_tee
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: Job status; on completion the result payload
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '400':
+          description: Request error — includes a job id tracked against more than one provider, where `provider_address` must be supplied to disambiguate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '403':
+          description: Caller is not the submitter of this job
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: async_job_not_found — this router has no such job id (it never existed, or it belongs to a different provider than the one pinned)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '502':
+          description: Upstream provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+  /videos/{id}/content:
+    get:
+      security:
+      - ApiKeyAuth: []
+      description: Stream the finished video file. If the job has not been charged yet (the client never polled `GET /videos/{id}`) it is charged before any bytes are sent. A job that is still running returns 409; a job that failed at the provider returns 424. `provider_address` is optional — it is resolved from the job id when omitted.
+      tags:
+      - Inference
+      summary: Download a completed video
+      parameters:
+      - description: Video job id returned by POST /videos
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Pin the provider that owns this job; resolved from the job id when omitted
+        name: provider_address
+        in: query
+        schema:
+          type: string
+      - description: Verify the provider's TEE signature before billing
+        name: verify_tee
+        in: query
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: The video file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Request error — includes a job id tracked against more than one provider, where `provider_address` must be supplied to disambiguate
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '403':
+          description: Caller is not the submitter of this job
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '404':
+          description: async_job_not_found — this router has no such job id (it never existed, or it belongs to a different provider than the one pinned)
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '409':
+          description: Video not ready yet; keep polling GET /videos/{id}
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '424':
+          description: The video job failed at the provider and has no output
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '429':
+          description: Too many concurrent downloads for this account
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+        '502':
+          description: Upstream provider error
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorResponse'
+components:
+  schemas:
+    github_com_0glabs_0g-router_pkg_inference.ResponseFormat:
+      type: object
+      properties:
+        json_schema:
+          description: 'Required when type is "json_schema": {name, schema, strict?}'
+        type:
+          description: '"text", "json_object", or "json_schema"'
+          type: string
+          example: json_schema
+    github_com_0glabs_0g-router_pkg_inference.ChatCompletionRequest:
+      type: object
+      properties:
+        attachments:
+          description: File attachments (uploaded via /v1/files)
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Attachment'
+        max_tokens:
+          description: Maximum output tokens
+          type: integer
+          example: 1024
+        messages:
+          description: Message list (content may be string or multimodal array)
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.RequestMessage'
+        model:
+          description: Model ID
+          type: string
+          example: qwen/qwen-2.5-7b-instruct
+        plugins:
+          description: Plugins to enable (e.g. [{"id":"web"}] for web search)
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Plugin'
+        provider:
+          description: Routing preferences (0G Router extension)
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ProviderPreferences'
+        response_format:
+          description: 'Output format: json_object or json_schema for structured output'
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ResponseFormat'
+        stream:
+          description: Whether to stream output
+          type: boolean
+          example: false
+        temperature:
+          description: Temperature parameter (0-2)
+          type: number
+          example: 0.7
+        tool_choice:
+          description: 'Which tool to use: "none", "auto", "required", or {"type":"function","function":{"name":"..."}}'
+        tools:
+          description: Tools (functions) the model may call
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Tool'
+        top_p:
+          description: Top-p sampling parameter
+          type: number
+          example: 0.9
+    github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock:
+      type: object
+      properties:
+        id:
+          description: tool_use fields
+          type: string
+        input: {}
+        name:
+          type: string
+        text:
+          type: string
+        type:
+          description: '"text", "tool_use", etc.'
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionResponse:
+      type: object
+      properties:
+        duration:
+          description: Audio duration (seconds)
+          type: number
+          example: 5.5
+        language:
+          description: Detected language
+          type: string
+          example: en
+        text:
+          description: Transcribed text
+          type: string
+          example: Hello, world!
+    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionRequest:
+      type: object
+      properties:
+        file_base64:
+          description: Base64 encoded audio file
+          type: string
+          example: SGVsbG8gd29ybGQ=
+        filename:
+          description: Filename
+          type: string
+          example: audio.mp3
+        language:
+          description: Audio language
+          type: string
+          example: en
+        model:
+          description: Model ID
+          type: string
+          example: whisper-1
+        response_format:
+          description: Response format
+          type: string
+          example: json
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.BillingInfo:
+      type: object
+      properties:
+        currency:
+          description: 'Currency is the unit of the cost fields: "0g" (wei) or "usd" (micro-USD),
+
+            matching the account''s settlement mode. Omitted on the wire for 0G traces
+
+            (empty → the historical wei default), so the field is additive.'
+          type: string
+          example: usd
+        input_cost:
+          description: Input cost
+          type: string
+          example: '0.00001'
+        output_cost:
+          description: Output cost
+          type: string
+          example: '0.00002'
+        total_cost:
+          description: Total cost
+          type: string
+          example: '0.00003'
+    github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails:
+      type: object
+      properties:
+        cache_write_1h_tokens:
+          description: 1-hour-TTL portion of the cache-write tokens
+          type: integer
+        cache_write_tokens:
+          description: Default/5-minute subset of PromptTokens written to prompt cache (creation)
+          type: integer
+        cached_tokens:
+          description: Subset of PromptTokens served from prompt cache (read)
+          type: integer
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_inference.Plugin:
+      type: object
+      properties:
+        id:
+          description: Plugin ID ("web" for web search)
+          type: string
+          example: web
+    github_com_0glabs_0g-router_pkg_inference.Tool:
+      type: object
+      properties:
+        function:
+          description: Function definition
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ToolFunction'
+        type:
+          description: Tool type (currently only "function")
+          type: string
+          example: function
+    github_com_0glabs_0g-router_pkg_inference.RequestMessage:
+      type: object
+      properties:
+        content:
+          type: string
+          example: Hello!
+        role:
+          type: string
+          example: user
+    github_com_0glabs_0g-router_pkg_inference.AnthropicUsage:
+      type: object
+      properties:
+        cache_creation:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicCacheCreation'
+        cache_creation_input_tokens:
+          type: integer
+        cache_read_input_tokens:
+          type: integer
+        input_tokens:
+          type: integer
+        output_tokens:
+          type: integer
+    github_com_0glabs_0g-router_pkg_inference.ToolFunction:
+      type: object
+      properties:
+        description:
+          description: Function description
+          type: string
+          example: Get weather
+        name:
+          description: Function name
+          type: string
+          example: get_weather
+        parameters:
+          description: JSON Schema for parameters
+    github_com_0glabs_0g-router_pkg_inference.ImageGenerationResponse:
+      type: object
+      properties:
+        created:
+          description: Creation timestamp
+          type: integer
+          example: 1677652288
+        data:
+          description: Image data list
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ImageData'
+    github_com_0glabs_0g-router_pkg_inference.ImageData:
+      type: object
+      properties:
+        b64_json:
+          description: Base64 encoded image data
+          type: string
+        revised_prompt:
+          description: Revised prompt
+          type: string
+          example: A sunset..
+        url:
+          description: Image URL
+          type: string
+          example: https://...
+    github_com_0glabs_0g-router_pkg_inference.AnthropicRequest:
+      type: object
+      properties:
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Attachment'
+        max_tokens:
+          type: integer
+        messages:
+          description: AnthropicMessage objects
+          type: array
+          items: {}
+        metadata: {}
+        model:
+          type: string
+        plugins:
+          description: 0G Router extensions (stripped before forwarding)
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Plugin'
+        provider:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ProviderPreferences'
+        stop_sequences:
+          type: array
+          items:
+            type: string
+        stream:
+          type: boolean
+        system:
+          description: string or []AnthropicContentBlock
+        temperature:
+          type: number
+        tool_choice: {}
+        tools:
+          type: array
+          items: {}
+        top_k:
+          type: integer
+        top_p:
+          type: number
+    internal_handler.RoutePreviewResponse:
+      type: object
+      properties:
+        object:
+          type: string
+        providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/internal_handler.RoutePreviewCandidate'
+        service_type:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.Attachment:
+      type: object
+      properties:
+        file_id:
+          description: File ID from upload endpoint
+          type: string
+          example: file-abc123
+    github_com_0glabs_0g-router_pkg_inference.Usage:
+      type: object
+      properties:
+        completion_tokens:
+          description: Output tokens
+          type: integer
+          example: 20
+        prompt_tokens:
+          description: Input tokens
+          type: integer
+          example: 10
+        prompt_tokens_details:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails'
+        total_tokens:
+          description: Total tokens
+          type: integer
+          example: 30
+    github_com_0glabs_0g-router_pkg_inference.ChatMessage:
+      type: object
+      properties:
+        content:
+          description: Message content
+          type: string
+          example: Hello!
+        role:
+          description: 'Role: system, user, assistant'
+          type: string
+          example: user
+    internal_handler.RoutePreviewRequest:
+      type: object
+      properties:
+        model:
+          description: 'OPTIONAL: canonical id (or alias / on-chain id); empty = any provider of this service type'
+          type: string
+        service_type:
+          description: chatbot | text-to-image | image-editing | speech-to-text
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.TraceInfo:
+      type: object
+      properties:
+        billing:
+          description: 'Billing is a pointer + omitempty so it is genuinely OMITTED (not emitted as
+
+            {"input_cost":"","output_cost":"","total_cost":""}) when the cost couldn''t
+
+            be computed — a mode-read/pricing error or missing billing service. The
+
+            success path always sets it, so the normal wire shape is unchanged.'
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.BillingInfo'
+        provider:
+          description: Provider address
+          type: string
+          example: 0x1234...
+        request_id:
+          description: Request ID
+          type: string
+          example: req_abc123
+        tee_verified:
+          description: 'TEE verification: nil=not requested, true=verified, false=failed'
+          type: boolean
+    github_com_0glabs_0g-router_pkg_inference.AnthropicResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock'
+        id:
+          type: string
+        model:
+          type: string
+        role:
+          description: '"assistant"'
+          type: string
+        stop_reason:
+          type: string
+        type:
+          description: '"message"'
+          type: string
+        usage:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicUsage'
+    github_com_0glabs_0g-router_pkg_inference.AnthropicCacheCreation:
+      type: object
+      properties:
+        ephemeral_1h_input_tokens:
+          type: integer
+        ephemeral_5m_input_tokens:
+          type: integer
+    github_com_0glabs_0g-router_pkg_inference.DeltaMessage:
+      type: object
+      properties:
+        content:
+          type: string
+        reasoning:
+          description: 'Reasoning carries the raw `delta.reasoning` field some providers emit
+
+            before NormalizeReasoningSSELine mirrors it into ReasoningContent.
+
+            Captured here so the upstream parser can count reasoning tokens for
+
+            the streaming-disconnect fallback (issue #190).'
+          type: string
+        reasoning_content:
+          type: string
+        role:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.ProviderPreferences:
+      type: object
+      properties:
+        address:
+          description: Route to a specific provider address
+          type: string
+          example: 0x1234...
+        allow_fallbacks:
+          description: 'Allow fallback to other providers on failure (default: true, false when address is set)'
+          type: boolean
+          example: true
+        sort:
+          description: 'Sort strategy: "latency" or "price" (default: price — cheapest healthy provider)'
+          type: string
+          example: latency
+        trust_mode:
+          description: 'Trust tier filter: "verified" | "private" (empty = no preference). A "verified" filter also accepts "private" providers, since private (native TeeML) provides verifiability plus privacy.'
+          type: string
+          example: verified
+    github_com_0glabs_0g-router_pkg_inference.Choice:
+      type: object
+      properties:
+        delta:
+          description: Delta content (streaming)
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.DeltaMessage'
+        finish_reason:
+          description: Finish reason
+          type: string
+          example: stop
+        index:
+          description: Choice index
+          type: integer
+          example: 0
+        message:
+          description: Message content (non-streaming)
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ChatMessage'
+    github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest:
+      type: object
+      properties:
+        model:
+          description: Model ID
+          type: string
+          example: dall-e-3
+        n:
+          description: Number of images to generate
+          type: integer
+          example: 1
+        prompt:
+          description: Image description
+          type: string
+          example: A beautiful sunset
+        response_format:
+          description: 'Response format: url or b64_json'
+          type: string
+          example: url
+        size:
+          description: Image size
+          type: string
+          example: 1024x1024
+    internal_handler.RoutePreviewCandidate:
+      type: object
+      properties:
+        address:
+          type: string
+        canonical_id:
+          type: string
+        endpoint:
+          type: string
+        model_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.ChatCompletionResponseWithTrace:
+      type: object
+      properties:
+        choices:
+          description: Choice list
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Choice'
+        created:
+          description: Creation timestamp
+          type: integer
+          example: 1677652288
+        id:
+          description: Response ID
+          type: string
+          example: chatcmpl-123
+        model:
+          description: Model used
+          type: string
+          example: qwen/qwen-2.5-7b-instruct
+        object:
+          description: Object type
+          type: string
+          example: chat.completion
+        usage:
+          description: Token usage
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.Usage'
+        x_0g_trace:
+          description: 0G trace info
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.TraceInfo'
+  requestBodies:
+    github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest'
+      description: Image generation request
+      required: true
+  securitySchemes:
+    ApiKeyAuth:
+      description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'
+      type: apiKey
+      name: Authorization
+      in: header
+    ManagementKeyAuth:
+      description: 'Management key for account read and API key management. Capabilities are scope-limited per key (account:read, keys:read, keys:create, keys:manage). Format: "Bearer mk-..."'
+      type: apiKey
+      name: Authorization
+      in: header

@@ -1,0 +1,1350 @@
+{
+  "item": [
+    {
+      "id": "2cfa933e-3072-46fb-9a47-6a1750c3a34d",
+      "name": "Account",
+      "description": {
+        "content": "",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "eeaa90e1-1771-4684-a536-f8cbfee97129",
+          "name": "Get account",
+          "request": {
+            "name": "Get account",
+            "description": {
+              "content": "Returns non-financial metadata for the authenticated wallet: `created_at` and `onboarded_at`. `onboarded_at` is an RFC3339 timestamp once the account has completed or dismissed the new-user onboarding flow, and `null` until then — a client reads it to decide whether to show onboarding. Set it via `POST /account/onboarded`. The value is stored per wallet on the server, so it persists across a cleared cache, another browser, and another device.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "account"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "Authorization"
+                },
+                {
+                  "key": "value",
+                  "value": "{{apiKey}}"
+                },
+                {
+                  "key": "in",
+                  "value": "header"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "6285c5de-9397-4ef1-a911-3ee1180964b6",
+              "name": "Account metadata",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"address\": \"0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65\",\n  \"created_at\": \"2026-01-15 10:30:00+00:00\",\n  \"onboarded_at\": \"2026-01-15 10:35:00+00:00\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "268283bd-97fc-4600-a7b2-4080f025cb17",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1ba8f2a3-e12e-49e3-a3dd-12cbf2113f0b",
+              "name": "Server error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "b244bed5-6462-4d35-9ae2-71c98857506f",
+          "name": "Get unified account funds",
+          "request": {
+            "name": "Get unified account funds",
+            "description": {
+              "content": "Returns a single aggregated view of the caller's funds so clients don't have to combine `/account/balance` (Router ledger) with the on-chain `PaymentVault.balanceOf` themselves.\n\n`total` = `router.subtotal` + `payment_layer.balance`, where `router.subtotal` = `deposit` + `credit` − `pending_charge` (the net Router-ledger position). `total` is the user's net spendable funds and **may be negative** when outstanding debt exceeds available funds — render the shortfall as \"owed to Router\". This differs from `/account/balance`'s `total_balance`, which keeps a ≥0 contract for settlement / SDK callers and does NOT subtract pending_charge.\n\n`payment_layer.balance` is the shared Payment Layer vault balance (`shared_across_products: true` — the vault is a pool across 0G apps, not owned exclusively by Router). `queried_at` is when that balance was actually read from chain; it is cached (~10s), so on a cache hit it can be up to that TTL in the past — treat it as the value's as-of time, not the request time.\n\nFor the Router-ledger-only view that settlement / SDK / mgmt-key integrations depend on, use `/account/balance` instead.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "account",
+                "funds"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "Authorization"
+                },
+                {
+                  "key": "value",
+                  "value": "{{apiKey}}"
+                },
+                {
+                  "key": "in",
+                  "value": "header"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "c61b42bd-0749-4dff-974c-4fa06aceda91",
+              "name": "Unified funds view",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "funds"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"address\": \"0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65\",\n  \"currency\": \"0g\",\n  \"payment_layer\": {\n    \"balance\": \"7086440000000000000\",\n    \"queried_at\": \"2026-05-25 16:21:00+00:00\",\n    \"shared_across_products\": true\n  },\n  \"router\": {\n    \"credit\": \"3560000000000000\",\n    \"deposit\": \"300000000000000000\",\n    \"pending_charge\": \"0\",\n    \"subtotal\": \"303560000000000000\"\n  },\n  \"total\": \"7390000000000000000\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "72d7dd11-d8b1-4116-b5d1-2bdcb79f8812",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "funds"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5c5c0592-1e69-4a44-be09-6265a17db981",
+              "name": "Server error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "funds"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "833e7843-1816-43e3-9886-842869f6e846",
+          "name": "Get daily usage statistics",
+          "request": {
+            "name": "Get daily usage statistics",
+            "description": {
+              "content": "Get usage statistics broken down by day for current user, with optional filters",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "account",
+                "usage",
+                "daily"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "api_key_id",
+                  "value": "<string>",
+                  "description": "Filter by API key ID"
+                },
+                {
+                  "disabled": false,
+                  "key": "source",
+                  "value": "<string>",
+                  "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+                },
+                {
+                  "disabled": false,
+                  "key": "start_date",
+                  "value": "<string>",
+                  "description": "Start date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "end_date",
+                  "value": "<string>",
+                  "description": "End date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "trust_mode",
+                  "value": "<string>",
+                  "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+                },
+                {
+                  "disabled": false,
+                  "key": "dimensions",
+                  "value": "<string>",
+                  "description": "Extra breakdown dimensions on top of (date, model). Only 'trust_mode' is supported: pass `dimensions=trust_mode` to split each day/model row per trust tier and emit the `trust_mode` field. Omit (default) for the legacy one-row-per (date, model) shape."
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "Authorization"
+                },
+                {
+                  "key": "value",
+                  "value": "{{apiKey}}"
+                },
+                {
+                  "key": "in",
+                  "value": "header"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "88a5b037-1660-4f69-96b4-77951f36c4c7",
+              "name": "Daily usage statistics",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "daily"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dimensions",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"currency\": \"0g\",\n  \"data\": [\n    {\n      \"cache_write_1h_tokens\": 0,\n      \"cache_write_tokens\": 0,\n      \"cached_tokens\": 3200,\n      \"canonical_id\": \"glm-5\",\n      \"cost\": \"150000000000000\",\n      \"date\": \"2024-01-15\",\n      \"input_tokens\": 8000,\n      \"model_id\": \"glm-5\",\n      \"output_tokens\": 4345,\n      \"request_count\": 42,\n      \"trust_mode\": \"verified\"\n    },\n    {\n      \"cache_write_1h_tokens\": 0,\n      \"cache_write_tokens\": 0,\n      \"cached_tokens\": 3200,\n      \"canonical_id\": \"glm-5\",\n      \"cost\": \"150000000000000\",\n      \"date\": \"2024-01-15\",\n      \"input_tokens\": 8000,\n      \"model_id\": \"glm-5\",\n      \"output_tokens\": 4345,\n      \"request_count\": 42,\n      \"trust_mode\": \"verified\"\n    }\n  ],\n  \"object\": \"list\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b434a878-621a-4cce-b76a-687ae1dd8e64",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "daily"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dimensions",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "7f8a7c2d-1a8e-4317-8b52-d797ca6905af",
+              "name": "Server error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "daily"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "dimensions",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "6ee2d4e2-bf7e-43a0-b9fd-b439cdde66ca",
+          "name": "Get usage history",
+          "request": {
+            "name": "Get usage history",
+            "description": {
+              "content": "Get usage history for current user, with optional filters",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "account",
+                "usage",
+                "history"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Limit number of records"
+                },
+                {
+                  "disabled": false,
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Offset for pagination (legacy). Ignored when `cursor` is set."
+                },
+                {
+                  "disabled": false,
+                  "key": "cursor",
+                  "value": "<string>",
+                  "description": "[beta] Opaque keyset cursor from a prior page's `next_cursor`. When set, pages via seek (constant per-page cost, independent of depth) and `offset` is ignored; also forces `include_total=false`."
+                },
+                {
+                  "disabled": false,
+                  "key": "include_total",
+                  "value": "true",
+                  "description": "[beta] Include the full-set `total` count (default true). Set false to skip the expensive COUNT(*); recommended with `cursor`."
+                },
+                {
+                  "disabled": false,
+                  "key": "model_id",
+                  "value": "<string>",
+                  "description": "Filter by model ID"
+                },
+                {
+                  "disabled": false,
+                  "key": "api_key_id",
+                  "value": "<string>",
+                  "description": "Filter by API key ID"
+                },
+                {
+                  "disabled": false,
+                  "key": "source",
+                  "value": "<string>",
+                  "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+                },
+                {
+                  "disabled": false,
+                  "key": "start_date",
+                  "value": "<string>",
+                  "description": "Start date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "end_date",
+                  "value": "<string>",
+                  "description": "End date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "trust_mode",
+                  "value": "<string>",
+                  "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "Authorization"
+                },
+                {
+                  "key": "value",
+                  "value": "{{apiKey}}"
+                },
+                {
+                  "key": "in",
+                  "value": "header"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "c4077a22-6c10-4b50-9cc0-4c9050a0b789",
+              "name": "Usage history list",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "history"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    },
+                    {
+                      "key": "cursor",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_total",
+                      "value": "true"
+                    },
+                    {
+                      "key": "model_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"currency\": \"0g\",\n  \"data\": [\n    {\n      \"api_key_id\": \"abc12345\",\n      \"cache_write_1h_tokens\": 0,\n      \"cache_write_tokens\": 0,\n      \"cached_tokens\": 40,\n      \"canonical_id\": \"glm-5\",\n      \"cost\": \"150000000000000\",\n      \"created_at\": \"2024-01-15 10:30:00+00:00\",\n      \"credit_used\": \"50000000000000\",\n      \"deposit_used\": \"100000000000000\",\n      \"id\": 1,\n      \"input_tokens\": 100,\n      \"model_id\": \"qwen-2.5-7b-instruct\",\n      \"output_tokens\": 50,\n      \"provider_address\": \"0x1234...\",\n      \"request_id\": \"req_abc123\",\n      \"trust_mode\": \"verified\"\n    },\n    {\n      \"api_key_id\": \"abc12345\",\n      \"cache_write_1h_tokens\": 0,\n      \"cache_write_tokens\": 0,\n      \"cached_tokens\": 40,\n      \"canonical_id\": \"glm-5\",\n      \"cost\": \"150000000000000\",\n      \"created_at\": \"2024-01-15 10:30:00+00:00\",\n      \"credit_used\": \"50000000000000\",\n      \"deposit_used\": \"100000000000000\",\n      \"id\": 1,\n      \"input_tokens\": 100,\n      \"model_id\": \"qwen-2.5-7b-instruct\",\n      \"output_tokens\": 50,\n      \"provider_address\": \"0x1234...\",\n      \"request_id\": \"req_abc123\",\n      \"trust_mode\": \"verified\"\n    }\n  ],\n  \"limit\": 20,\n  \"next_cursor\": \"string\",\n  \"object\": \"list\",\n  \"offset\": 0,\n  \"total\": 100\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "20c7c406-babe-4ce2-b633-3ef8313ef8fe",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "history"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    },
+                    {
+                      "key": "cursor",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_total",
+                      "value": "true"
+                    },
+                    {
+                      "key": "model_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "fd5bd43f-f15b-46fe-935c-482e7a2b2f0e",
+              "name": "Server error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "history"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    },
+                    {
+                      "key": "cursor",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "include_total",
+                      "value": "true"
+                    },
+                    {
+                      "key": "model_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "307063a8-fee4-481b-aaa3-b4be5448bc10",
+          "name": "Get usage statistics",
+          "request": {
+            "name": "Get usage statistics",
+            "description": {
+              "content": "Get usage statistics for current user, optionally filtered by API key and date range",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "account",
+                "usage",
+                "stats"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "api_key_id",
+                  "value": "<string>",
+                  "description": "Filter by API key ID"
+                },
+                {
+                  "disabled": false,
+                  "key": "source",
+                  "value": "<string>",
+                  "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+                },
+                {
+                  "disabled": false,
+                  "key": "start_date",
+                  "value": "<string>",
+                  "description": "Start date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "end_date",
+                  "value": "<string>",
+                  "description": "End date (YYYY-MM-DD, inclusive)"
+                },
+                {
+                  "disabled": false,
+                  "key": "trust_mode",
+                  "value": "<string>",
+                  "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+                }
+              ],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "key",
+                  "value": "Authorization"
+                },
+                {
+                  "key": "value",
+                  "value": "{{apiKey}}"
+                },
+                {
+                  "key": "in",
+                  "value": "header"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "856527cb-8dee-43ac-bd75-103d97f1cf83",
+              "name": "Usage statistics",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "stats"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"completion_tokens\": 4345,\n  \"currency\": \"0g\",\n  \"prompt_tokens\": 8000,\n  \"total_cost\": \"1000000000000000\",\n  \"total_requests\": 42,\n  \"total_tokens\": 12345\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "647e98a0-4a43-46b3-8989-95bb046a9009",
+              "name": "Unauthorized",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "stats"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "45ce32c3-0cf8-4a2a-97b7-0c0165d18e26",
+              "name": "Server error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "account",
+                    "usage",
+                    "stats"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "api_key_id",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "source",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "start_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "end_date",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "trust_mode",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: apikey",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<API Key>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": {\n    \"code\": \"bad_request\",\n    \"message\": \"Invalid request\",\n    \"type\": \"invalid_request\"\n  },\n  \"request_id\": \"string\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "63396694-837e-4e0c-9f24-4bdb877faf98",
+    "name": "0G Router Account API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "0G Router is an API gateway between users and the decentralized 0G Compute Provider network.\nIt provides unified access, fee collection, and intelligent routing for AI inference services.\n\n## Balance model: Router ledger vs Payment Layer vault\n\nUser funds live in the shared 0G Payment Layer (PL) vault — a multi-app funding pool that other 0G products also draw from. Router does not drain a user's full vault balance up front; it pulls small amounts on demand into its own ledger as inference is consumed.\n\nAs a result, the `/v1/account/balance` endpoint returns the **Router ledger only** (`deposit_balance + credit_balance`). It deliberately excludes the PL vault, because vault balance is shared across consumer apps and is not yet committed to Router.\n\n### Picking an endpoint: `/balance` vs `/funds`\n\nIf you just want one **display** balance that already combines both sides, call `/v1/account/funds`. Router does the aggregation server-side and returns a net `total` = `(deposit + credit − pending_charge) + vault_balance`, plus the breakdown. Unlike `/balance`'s `total_balance` (Router-ledger-only, always `≥ 0`), `/funds.total` includes the full vault and **may be negative** when the user owes Router (`pending_charge` exceeds available funds) — render that as \"owed to Router\".\n\nUse `/v1/account/balance` (not `/funds`) for settlement / SDK / mgmt-key integrations that depend on the Router-ledger-only, `≥ 0` figure. And note `/funds.total` is a wallet-**display** number: it is **not** the admission figure — the \"can I submit a request\" calculation below applies `vault_ratio` and is computed separately.\n\n### Admission rule\n\nAn inference request is admitted whenever either side has enough funds:\n\n- Router ledger covers `min_cost`, **or**\n- `vault_balance × vault_ratio − pending_charge >= min_cost` (deferred path; the shortfall is recorded as `pending_charge` and cleared from the next PL pull).\n\nOtherwise the request returns `402 insufficient_balance`.\n\n### Auto-pull from the vault (mainnet values)\n\nAfter a user's **first successful inference charge**, the account becomes pull-eligible. A background worker then keeps the Router ledger topped up from the PL vault:\n\n| Parameter | Mainnet value | Meaning |\n|---|---|---|\n| Scan interval | 3 s | How often Router checks each pull-eligible account |\n| Low watermark | 0.1 0G | Pull triggers when effective Router balance drops below this |\n| High watermark | 0.5 0G | Target balance after a pull (≈ amount pulled per cycle) |\n| Vault ratio | 0.5 | Only 50% of the PL vault counts toward admission (safety margin for the shared pool) |\n| min_cost | 0.01 0G | Minimum cost a single request must be able to cover |\n\nAccounts that have only deposited to the vault but never sent an inference request will not trigger a pull.\n\n### Predicting \"can submit\" on the client\n\nTo gate a submit button before the first request, combine both sides:\n\n```\navailable = router.total_balance + max(0, vault_balance × vault_ratio − pending_charge)\n```\n\nUse `vault_ratio` from the table above (`0.5` on mainnet). Allow submission when `available > 0`. There is no need to mirror the `min_cost` floor on the client — Router enforces it at admission time and returns `402` if the request cannot be covered.\n\n## Changelog\n\n`### Unreleased` lists API changes merged but not yet live on mainnet; on release each is cut into a dated `### vX.Y — YYYY-MM` section. Endpoint and field stability is marked inline with `[beta]`.\n\n### Unreleased\n- **`POST /v1/messages` — a model that does not speak the Anthropic wire format now returns `400`, not `503`** — asking `/v1/messages` for a model whose endpoints only serve the OpenAI format used to fail with `503 \"No available providers for this request\"`, byte-for-byte the error a real outage returns. Since SDKs treat `5xx` as retryable and `4xx` as final, a Messages-API-only client spent its whole retry budget on a request no retry can satisfy — the mismatch is permanent — and then surfaced it as an outage rather than as \"use the other endpoint\". It is now a `400 invalid_request_error` naming the model and the formats it does serve: `model \"some-model\" is not available on the anthropic API format (supported: openai); use POST /v1/chat/completions instead`. **If you branch on status codes, add a `400` arm here** — this condition previously arrived as `503`. Check a model's formats up front via `supported_formats` on `GET /v1/models`. Unchanged: a genuine supply outage still returns `503`, an unknown model still `404`, and a model reachable on the Anthropic format routes exactly as before.\n- **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions` — the `ZG-Res-Key` response header now carries the PROVIDER's response id, passed through verbatim, instead of a router-generated value** — it lets a client independently verify the provider's TEE signature for that specific response against the provider's signature endpoint. Two behavioural notes: it is now **present only when the provider returns one** (the router previously always emitted a value), so treat its absence as \"no provider response id available\" rather than an error; and its value is the provider's own — opaque and provider-scoped, not a router-owned token. The router's own stable, always-present per-response identifier is unchanged: read **`X-Request-ID`** (echoed on every response, and the value recorded in your usage history) when you need a handle the router will recognise. No request contract change.\n- **`POST /v1/videos`, `GET /v1/models` — documented: `size` and `seconds` do not mean what the OpenAI Video API means by them** — no behaviour change; the behaviour was undocumented and reads as a bug when you meet it. The request shape is OpenAI's, but the models behind it are not, and where a model's own limits differ they win. **`size` names a resolution TIER, not output dimensions**, because a video model advertises the tiers it is PRICED at rather than arbitrary sizes. Two spellings are accepted and they are not equivalent: **pixel dimensions** (`1280x720` — OpenAI's spelling, and what an SDK sends) select the **aspect ratio only, and only for text-to-video**, so asking a 2K-only model for `1280x720` returns a **2560x1440** clip billed at the 2K rate rather than a 720p one; for **image-to-video they have no effect at all**, since the aspect ratio follows your reference image (a tier name still selects the tier there). **A tier name** (`2K`) addresses the tier directly — send only names that appear in that list, since it is the set we can price and it grows as a model adds tiers. Pixel dimensions are the safe thing to send blind; a tier name is what to send when you must have a specific tier. Read the tiers from `pricing.variants[].dimensions.resolution` on `GET /v1/models`. **`seconds` is clamped to the model's supported range in BOTH directions, silently**: below the minimum you get and pay for the minimum, above the maximum you get the maximum, and neither errors — so a request outside the range costs something other than what you asked for. Omitting either field is the recommended default. For both, the **submit** response echoes what you sent while the **poll** response reports what was actually rendered, so reconcile against the poll. Per-model limits (supported range, tiers, prompt length, accepted reference-image formats and dimensions) are stated in each model's `description`; a request that violates one is rejected by the model provider, so that error text and any numeric code in it are theirs. Billing is unaffected throughout — you are billed for the clip actually produced, at the per-second price published for its tier. **[beta]**\n- **`GET /v1/videos/{id}`, `GET /v1/async/jobs/{id}` — fixed: `x_0g_trace.billing` on a re-poll now reports the amount you were CHARGED, not a fresh quote** — an async job's trace is returned on every poll, not only the one that settles the charge. Polls after settlement were re-deriving the fee at the CURRENT price instead of reading the booked figure, so the reported cost could drift away from the charge over time. It drifts whenever the provider prices in USD, because its native-token rate is derived from a moving FX pair: one clip's trace read `6794472400000000000` when it settled and `6696290550000000000` five hours later, a 1.45% gap against a charge that had not changed. **No money was ever wrong** — the ledger, `GET /v1/account/usage/history` and your balance always agreed, and every one of them still does — but the trace is what many clients reconcile spend against, so it now carries the booked amount. The wire shape is unchanged (`input_cost` / `output_cost` / `total_cost`, `currency` on USD traces), and the settling poll is unaffected: it already reported the charge it had just written. Reconciling off `GET /v1/account/usage/history` was, and remains, the authoritative route. If the booked figure cannot be read the response falls back to the previous behaviour rather than failing your poll.\n- **`POST /v1/videos`, `GET /v1/videos/{id}`, `GET /v1/videos/{id}/content` — async video generation** — three new endpoints add video as a modality, in the OpenAI Video API shape. `POST /v1/videos` accepts `{model, prompt, seconds, size}` as JSON or as `multipart/form-data` (so an uploaded first-frame image can drive image-to-video) and returns `{id, status, provider_address}`; `GET /v1/videos/{id}` reports status and is what settles the charge once the job completes; `GET /v1/videos/{id}/content` streams the finished file. On both `GET`s **`provider_address` is optional** — it is resolved from the job id — so an OpenAI-native client can poll and download with no query parameters. Because generation takes minutes, billing happens at completion rather than at submit, and on the **duration actually delivered** — your requested `seconds` becomes the billing basis only when the provider's own figure is unusable — it completed the job but reported no duration at all (so that a delivered clip is never served free), or it reported one implausibly larger than you asked for, which is capped. Both cases are logged as degraded. The cap bounds the DURATION at a small multiple of what you requested, not the fee: on a `video_clip` table the price is a step function of duration, so a capped duration can still land on a dearer row than the one you asked for. The same precedence applies to `size`: the resolution the price is keyed on is the one the provider reports, falling back to the `size` you asked for when the provider does not echo it, which is the normal case for some upstreams — so a resolution-priced model is billed at its own tier rather than at the table's most expensive one. Two consequences worth coding against: the content endpoint **charges before it streams** if you never polled, so bytes are never delivered unbilled; and each account may hold only a small number of unfinished video jobs at once, so a submit can return **`429`** with code `video_jobs_in_flight_limit` while earlier clips are still rendering. **`seconds` is REQUIRED** — the one place this endpoint deviates from the upstream OpenAI Video API, where it is optional. Billing is per delivered second and the delivered figure comes from the provider, so your declared duration is the only reference the router can sanity-check it against; without one, a provider misreporting its units could charge orders of magnitude more. Omitting it returns `400` `invalid_request` with \"seconds is required\" — note this applies to the OpenAI SDK path too, including multipart image-to-video. A `seconds` value the model has no price for is likewise rejected up front with `400` and the list of durations that are available, rather than failing after the clip was generated. Other job states: **`404`** `async_job_not_found` on either `GET` means this router has no such job id — it never existed, or you pinned a `provider_address` other than the one that owns it — so re-check the id (and drop the pin, since it is resolved for you) rather than retrying; **`409`** `video_not_ready` from the content endpoint means keep polling; **`424`** `video_job_failed` means the job died at the provider and has no output. A USD-settling account can use video only when the model publishes a USD video price (`pricing_usd.video` or `pricing_usd.variants`); otherwise submit returns `501` `usd_not_supported` rather than a mis-priced charge. **[beta]**\n- **`GET /v1/account/usage/history` — `request_id` VALUE format differs for VIDEO usage rows** — the `request_id` on a usage row for a video job is `async-<16 hex>-<job id>`, while every other async modality uses `async-<8 chars of the provider address>-<job id>`. The field, its type and the `async-` prefix are unchanged, so a `LIKE 'async-%'` filter or an exact-match lookup still behaves identically. Only one thing breaks: if you PARSE the middle segment expecting the provider's address suffix, it will not match on a video row — read `provider_address` from the row itself instead, which is the stable way to get it for every modality. Nothing else about the field changed, and no other endpoint's `request_id` changed. **[beta]**\n- **`GET /v1/models`, `GET /v1/providers` — `pricing.video` and `pricing.variants`; `GET /v1/service-types` — `video-generation`** — the pricing object gains **`video`**, the flat price per generated second for a single-rate video model, and **`variants`**, a list of priced request shapes for a model whose price depends on the shape of the request rather than a single rate. Each variant carries `dimensions` (the axes it is keyed on, e.g. `{\"resolution\":\"2K\",\"duration_seconds\":\"5\"}`), `unit` — **`video_second`** (multiply `unit_price` by the generated seconds) or **`video_clip`** (`unit_price` is the whole-clip total) — and `unit_price`, which is always the final per-unit price and never a multiplier to apply yourself. When `variants` is present, use it, and note that a table has one of two shapes, with different fallback rules for a request it does not name. The shape is told by the `dimensions` keys, not by `unit`. A **resolution-only** table (rows keyed on `{\"resolution\": ...}`) keeps `video` published: it is the rate for any resolution the table does NOT list, so match your resolution against `variants`, else use `video` × seconds. A **bucketed** table (rows keyed on `{\"resolution\", \"duration_seconds\"}`) omits `video`, because it is never the basis there, and a request the table does not name exactly is billed off the table itself — the row for **your resolution with the smallest `duration_seconds` that is still ≥ your clip's duration**, and if no row at your resolution covers it (or your resolution has no rows at all) the **highest-priced row in the whole table**. That last case can therefore be much dearer than the shape you asked for; it means the operator has not tabulated what you requested, and the router counts it so they can. A model with no `variants` at all bills `video` × generated seconds. Resolution matching is case- and whitespace-insensitive on our side. Duration here is the length actually delivered, which for a request carrying a reference image or video is the vendor's billed length (input + output) and so can exceed the `seconds` you asked for. `GET /v1/service-types` lists `video-generation` / \"Video Generation\" once a video provider is on the network. **Purely additive — no existing field changes.** A video-generation model still reports `prompt` / `completion`, unchanged. Note these are only per-TOKEN prices for chat: on every other modality `completion` is an echo of the on-chain output price whose meaning follows the modality — per image for `text-to-image` / `image-editing` (which is why `image` exists), and per generated second for `video-generation` (which is why `video` / `variants` exist). So compute video cost from `video` / `variants`, exactly as image cost is computed from `image`; do not multiply `completion` by a token count. One caveat specific to `variants`, because it is a whole price LIST rather than a single rate: `GET /v1/models` aggregates a model across every endpoint serving it and shows one endpoint's block, so when two endpoints of the same model publish different tables the quote you read may not be the table the request is billed against. Endpoints are per-provider, so read `GET /v1/providers` for the exact list, or pin `provider.address` if you need the quote and the charge to be the same table. This is a general property of the aggregated view rather than something new — the shown block always comes from one endpoint, and which endpoint the request routes to depends on the routing preferences you send (`sort`, a pinned `address`) and on health — but it is worth stating for `variants` specifically, because a table is a whole price list rather than a single rate, so two endpoints can differ in the SHAPE of what they charge and not just the amount. **[beta]**\n\n- **All inference endpoints — the `min_cost` admission floor rises from `0.00001 0G` to `0.01 0G`** — a request is admitted only when the account can cover `min_cost`, either from the Router ledger or through the vault deferred path (see the **Admission rule** table above, which now reads `0.01 0G`). The practical effect is that an account whose spendable balance has fallen below `0.01 0G` now receives `402` rather than being served one last request. **No balance is lost** — the remainder stays on the account and becomes spendable again on the next top-up — and accounts with vault funds are unaffected, because the vault side of the admission rule is unchanged. The old floor was low enough to be indistinguishable from zero, which let a nearly-empty account be served a request it could not pay for, leaving a debt (`pending_charge`) that the account could then only clear by funding its vault.\n- **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions`, `/v1/async/images/*`, `/v1/routing/preview` — pinning a provider that doesn't serve the requested model now returns `400`, not `500`** — when a request pins a specific provider (`provider.address` in the body or the `X-0G-Provider-Address` header) whose address exists but does not serve the requested `model` (or whose service type / API format doesn't match the endpoint), the router now returns **`400`** with error code **`provider_model_mismatch`** instead of a generic `500` / `502`. This is a deterministic bad pin — two constraints (\"use this exact provider\" and \"serve this model\") that don't intersect — so retrying won't help and the response now says so, letting the caller correct the pin. An unpinned request is unaffected (it routes normally to a provider that serves the model), as is a pin that resolves to no provider at all (still `400`/`provider not found`).\n- **`GET /v1/account`, `POST /v1/account/onboarded` (JWT; `GET` also accepts a management key with `account:read`) — account onboarding state** — a new endpoint pair exposes whether the authenticated wallet has handled the new-user onboarding flow. `GET /v1/account` returns account metadata `{address, created_at, onboarded_at}`, where **`onboarded_at`** is an RFC3339 timestamp once the account has completed or dismissed onboarding and **`null`** until then, so a client can decide whether to show the flow. Because the value is stored per wallet on the server (not in the browser), it persists across a cleared cache, another browser, and another device. `POST /v1/account/onboarded` records that the flow was handled, setting `onboarded_at` to the server time; it is **idempotent** — the first call stamps the timestamp and later calls (a client retry, or a \"dismiss\" after a \"complete\") leave it unchanged — so both client paths can safely call and retry it. **[beta]**\n- **`POST /v1/chat/completions`, `/v1/messages`, `/v1/images/*`, `/v1/audio/transcriptions`, `/v1/async/images/*` — transient vault-check failure now returns retryable `503` instead of `402`** — a routing-mode (Payment Layer vault) user's request is admitted by checking their on-chain vault balance. When that chain read fails transiently (RPC blip), the pre-request balance gate previously returned `402 \"Insufficient balance\"` — indistinguishable from a genuinely empty account, so a funded user saw \"insufficient balance\" and assumed their deposit was lost. It now returns **`503`** with error code **`vault_unavailable`** (OpenAI-style) / `api_error` (Anthropic-style) and is safe to retry; the next request self-heals once the RPC recovers. Behavior is still fail-closed (the request is never admitted while vault state is unknown — no unbounded deferred debt) and a genuine balance shortfall (vault read succeeds, funds insufficient) is unchanged at `402`. No request contract change.\n- **All endpoints — a client-supplied `X-Request-ID` is now validated before it is echoed and recorded** — the header is still propagated as your correlation id, but only when it is at most 64 characters, built from letters, digits and `- _ . :`, and does not begin with `async-`. A value failing any of those is replaced by a server-generated id, exactly as an over-long one already was; you always get the id actually in effect back in the `X-Request-ID` response header, so read it there rather than assuming your value was kept. UUIDs, ULIDs, hex trace ids and W3C `traceparent` values are unaffected. The `async-` prefix is reserved because the router derives its own asynchronous-billing identifiers in that namespace.\n\nContact Support:\n Name: 0G Labs\n Email: contact@0g.ai",
+      "type": "text/plain"
+    }
+  }
+}

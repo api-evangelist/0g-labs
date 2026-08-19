@@ -1,0 +1,61 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router Models API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Models",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get model list",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/models",
+            "params": [
+              {
+                "name": "legacy",
+                "value": "",
+                "type": "query",
+                "description": "[beta] true: historical raw-model_id-keyed view (listing-only; an unregistered id it lists is still 404 on the inference path). Default false: canonical view (id = canonical_id)."
+              },
+              {
+                "name": "pricing",
+                "value": "",
+                "type": "query",
+                "description": "[beta] 'usd': emit the OpenRouter-standard shape with per-token USD decimal strings under the top-level `pricing` field (for external pricing aggregators, e.g. TKX); models without a USD price are omitted. Default: native prices under `pricing`, USD under `pricing_usd`."
+              },
+              {
+                "name": "provider_address",
+                "value": "",
+                "type": "query",
+                "description": "Filter by provider address (OR: match any)"
+              },
+              {
+                "name": "input_modality",
+                "value": "",
+                "type": "query",
+                "description": "Filter by input modality, e.g. text, image (AND: must support all)"
+              },
+              {
+                "name": "supported_parameter",
+                "value": "",
+                "type": "query",
+                "description": "Filter by supported parameter, e.g. temperature (AND: must support all)"
+              }
+            ]
+          },
+          "docs": "Get all available AI models. By default the response is the **canonical view**: one row per `canonical_id`, with curated registry metadata and endpoints aggregated (max context, union of params/formats, cheapest pricing); `id` is the canonical model id. A model stays listed even when all its endpoints are temporarily unhealthy (health is not a visibility filter; routing falls back to unhealthy endpoints so a listed model is always routable). To enumerate the endpoints behind a canonical id, call"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

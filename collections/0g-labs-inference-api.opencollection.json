@@ -1,0 +1,437 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router Inference API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Inference",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Submit async image edit job",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/async/images/edits",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Submit an image editing job to be processed asynchronously. The response includes `jobId` and `provider_address` — clients then poll `/v1/async/jobs/{jobId}` with `?provider_address=...` to retrieve the result.\nSupports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`). Multipart endpoints have no body-side routing surface — headers only."
+        },
+        {
+          "info": {
+            "name": "Submit async image generation job",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/async/images/generations",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Submit an image generation job to be processed asynchronously. The response includes `jobId` and `provider_address` — clients then poll `/v1/async/jobs/{jobId}` with `?provider_address=...` to retrieve the result.\n**Provider Routing**: Use `\"provider\": {...}` body field OR `X-0G-Provider-*` request headers. Header > body precedence resolves same-field conflicts."
+        },
+        {
+          "info": {
+            "name": "Audio transcription",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/audio/transcriptions",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Transcribe audio file to text. Accepts **either** content type:\n- `application/json` (default, schema below): `AudioTranscriptionRequest` body with base64-encoded audio in `file_base64`.\n- `multipart/form-data` (OpenAI-style): `file` part with audio bytes + `model` form field (plus optional `language`, `response_format`). Schema not auto-documented here — matches the OpenAI `/v1/audio/transcriptions` shape.\nSupports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `"
+        },
+        {
+          "info": {
+            "name": "Chat completion",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/chat/completions",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Send chat request to AI provider (OpenAI compatible API).\n\n**Web Search**: Add `\"plugins\": [{\"id\": \"web\"}]` to enable real-time web search.\nSearch results are injected into the prompt context and returned as `url_citation` annotations\nin the response. Works with any model. Multi-turn conversations automatically rewrite\nthe query for better search relevance. The injected search context tokens are billed\nas normal input tokens.\n\n**File Attachments**: Upload via `POST /v1/files`, then reference wit"
+        },
+        {
+          "info": {
+            "name": "Image editing",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/images/edits",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "multipart-form",
+              "data": [
+                {
+                  "name": "image",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "prompt",
+                  "type": "text",
+                  "value": ""
+                },
+                {
+                  "name": "model",
+                  "type": "text",
+                  "value": ""
+                }
+              ]
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Edit an image using AI (inpainting, variations).\nSupports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sort`, `Trust-Mode`, `Allow-Fallbacks`). Multipart endpoints have no body-side routing surface — headers only."
+        },
+        {
+          "info": {
+            "name": "Image generation",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/images/generations",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Generate images using AI. Supports `provider` routing preferences (see /chat/completions)."
+        },
+        {
+          "info": {
+            "name": "Anthropic Messages API",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/messages",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Send chat request using Anthropic Messages API format.\nRoutes to providers that support the Anthropic format.\nSupports web search plugins, file attachments, and provider routing preferences\n(same as `/chat/completions`)."
+        },
+        {
+          "info": {
+            "name": "Preview provider selection (E2EE)",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/routing/preview",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Return, in fallback order, the provider(s) the router WOULD select for a request — WITHOUT executing, billing, or mutating routing state. Built for end-to-end-encrypted (sealed) requests: a sealed request must be encrypted to a specific provider enclave before it can be sent, so a gateway calls this first (with the sensitive `messages` / prompt stripped out), seals to the head candidate, and pins the real request to it via `X-0G-Provider-Address` — falling back to the next candidate (re-sealing)"
+        },
+        {
+          "info": {
+            "name": "Submit async video generation job",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/videos",
+            "headers": [
+              {
+                "name": "X-0G-Provider-Address",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Sort",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Trust-Mode",
+                "value": ""
+              },
+              {
+                "name": "X-0G-Provider-Allow-Fallbacks",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Submit a video generation job (OpenAI Video API shape). The response includes `id` and `provider_address` — clients poll `GET /videos/{id}?provider_address=...` and download the result from `GET /videos/{id}/content?provider_address=...`.\nAccepts `application/json` OR `multipart/form-data`. Use multipart to drive image-to-video: send the same fields as form values plus the reference image as a file part.\nSupports provider routing preferences via `X-0G-Provider-*` request headers (`Address`, `Sor"
+        },
+        {
+          "info": {
+            "name": "Poll async video generation job",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/videos/:id",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Video job id returned by POST /videos"
+              },
+              {
+                "name": "provider_address",
+                "value": "",
+                "type": "query",
+                "description": "Pin the provider that owns this job; resolved from the job id when omitted"
+              },
+              {
+                "name": "verify_tee",
+                "value": "",
+                "type": "query",
+                "description": "Verify the provider's TEE signature and include the trace"
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Return a video job's current status. When the job has completed this is also what settles the charge. `provider_address` is optional — it is resolved from the job id when omitted, so an OpenAI-native client can call `GET /videos/{id}` with no query parameters."
+        },
+        {
+          "info": {
+            "name": "Download a completed video",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/videos/:id/content",
+            "params": [
+              {
+                "name": "id",
+                "value": "",
+                "type": "path",
+                "description": "Video job id returned by POST /videos"
+              },
+              {
+                "name": "provider_address",
+                "value": "",
+                "type": "query",
+                "description": "Pin the provider that owns this job; resolved from the job id when omitted"
+              },
+              {
+                "name": "verify_tee",
+                "value": "",
+                "type": "query",
+                "description": "Verify the provider's TEE signature before billing"
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Stream the finished video file. If the job has not been charged yet (the client never polled `GET /videos/{id}`) it is charged before any bytes are sent. A job that is still running returns 409; a job that failed at the provider returns 424. `provider_address` is optional — it is resolved from the job id when omitted."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

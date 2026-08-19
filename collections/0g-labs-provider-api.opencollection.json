@@ -1,0 +1,49 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router Provider API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Provider",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get provider list",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/providers",
+            "params": [
+              {
+                "name": "service_type",
+                "value": "",
+                "type": "query",
+                "description": "Filter by service type (chatbot, text-to-image, speech-to-text)"
+              },
+              {
+                "name": "model",
+                "value": "",
+                "type": "query",
+                "description": "Filter by on-chain model ID (e.g. zai-org/GLM-5.1-FP8); exact model_id match. Empty = not filtered."
+              },
+              {
+                "name": "canonical_id",
+                "value": "",
+                "type": "query",
+                "description": "[beta] Filter by canonical model ID (e.g. glm-5.1); lists every endpoint serving that canonical. Composes (AND) with model. Empty = not filtered."
+              }
+            ]
+          },
+          "docs": "Get all TEE-acknowledged providers, optionally narrowed by service type, on-chain model id, and/or canonical id. `model` and `canonical_id` are independent filters and compose (ANDed): `canonical_id` alone lists every endpoint of a canonical, while `model` + `canonical_id` narrows to a specific endpoint within it. An empty value means \"not filtered on\" (so no filters = list all). Includes providers with unknown health status (is_healthy=null)."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

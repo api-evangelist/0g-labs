@@ -1,0 +1,235 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "0G Router Account API",
+    "version": "1.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Account",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get account",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/account",
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Returns non-financial metadata for the authenticated wallet: `created_at` and `onboarded_at`. `onboarded_at` is an RFC3339 timestamp once the account has completed or dismissed the new-user onboarding flow, and `null` until then — a client reads it to decide whether to show onboarding. Set it via `POST /account/onboarded`. The value is stored per wallet on the server, so it persists across a cleared cache, another browser, and another device."
+        },
+        {
+          "info": {
+            "name": "Get unified account funds",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/account/funds",
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Returns a single aggregated view of the caller's funds so clients don't have to combine `/account/balance` (Router ledger) with the on-chain `PaymentVault.balanceOf` themselves.\n\n`total` = `router.subtotal` + `payment_layer.balance`, where `router.subtotal` = `deposit` + `credit` − `pending_charge` (the net Router-ledger position). `total` is the user's net spendable funds and **may be negative** when outstanding debt exceeds available funds — render the shortfall as \"owed to Router\". This diffe"
+        },
+        {
+          "info": {
+            "name": "Get daily usage statistics",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/account/usage/daily",
+            "params": [
+              {
+                "name": "api_key_id",
+                "value": "",
+                "type": "query",
+                "description": "Filter by API key ID"
+              },
+              {
+                "name": "source",
+                "value": "",
+                "type": "query",
+                "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+              },
+              {
+                "name": "start_date",
+                "value": "",
+                "type": "query",
+                "description": "Start date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "end_date",
+                "value": "",
+                "type": "query",
+                "description": "End date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "trust_mode",
+                "value": "",
+                "type": "query",
+                "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+              },
+              {
+                "name": "dimensions",
+                "value": "",
+                "type": "query",
+                "description": "Extra breakdown dimensions on top of (date, model). Only 'trust_mode' is supported: pass `dimensions=trust_mode` to split each day/model row per trust tier and emit the `trust_mode` field. Omit (default) for the legacy one-row-per (date, model) shape."
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Get usage statistics broken down by day for current user, with optional filters"
+        },
+        {
+          "info": {
+            "name": "Get usage history",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/account/usage/history",
+            "params": [
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Limit number of records"
+              },
+              {
+                "name": "offset",
+                "value": "",
+                "type": "query",
+                "description": "Offset for pagination (legacy). Ignored when `cursor` is set."
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "[beta] Opaque keyset cursor from a prior page's `next_cursor`. When set, pages via seek (constant per-page cost, independent of depth) and `offset` is ignored; also forces `include_total=false`."
+              },
+              {
+                "name": "include_total",
+                "value": "",
+                "type": "query",
+                "description": "[beta] Include the full-set `total` count (default true). Set false to skip the expensive COUNT(*); recommended with `cursor`."
+              },
+              {
+                "name": "model_id",
+                "value": "",
+                "type": "query",
+                "description": "Filter by model ID"
+              },
+              {
+                "name": "api_key_id",
+                "value": "",
+                "type": "query",
+                "description": "Filter by API key ID"
+              },
+              {
+                "name": "source",
+                "value": "",
+                "type": "query",
+                "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+              },
+              {
+                "name": "start_date",
+                "value": "",
+                "type": "query",
+                "description": "Start date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "end_date",
+                "value": "",
+                "type": "query",
+                "description": "End date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "trust_mode",
+                "value": "",
+                "type": "query",
+                "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Get usage history for current user, with optional filters"
+        },
+        {
+          "info": {
+            "name": "Get usage statistics",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/account/usage/stats",
+            "params": [
+              {
+                "name": "api_key_id",
+                "value": "",
+                "type": "query",
+                "description": "Filter by API key ID"
+              },
+              {
+                "name": "source",
+                "value": "",
+                "type": "query",
+                "description": "Filter by source: 'wallet' (JWT/browser), 'api_key' (any API key), or omit for all"
+              },
+              {
+                "name": "start_date",
+                "value": "",
+                "type": "query",
+                "description": "Start date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "end_date",
+                "value": "",
+                "type": "query",
+                "description": "End date (YYYY-MM-DD, inclusive)"
+              },
+              {
+                "name": "trust_mode",
+                "value": "",
+                "type": "query",
+                "description": "Filter by trust tier: 'standard' | 'verified' | 'private'. Omit for all tiers."
+              }
+            ],
+            "auth": {
+              "type": "apikey",
+              "key": "Authorization",
+              "value": "{{Authorization}}",
+              "placement": "header"
+            }
+          },
+          "docs": "Get usage statistics for current user, optionally filtered by API key and date range"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
