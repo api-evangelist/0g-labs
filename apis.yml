@@ -39,7 +39,7 @@ x-coverage:
   - url: https://docs.0g.ai/llms.txt
     status: 200
   checked: '2026-08-05'
-specificationVersion: '0.21'
+specificationVersion: '0.23'
 created: '2026-08-05'
 modified: '2026-08-05'
 tags:
