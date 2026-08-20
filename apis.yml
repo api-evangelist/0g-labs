@@ -43,6 +43,21 @@ specificationVersion: '0.23'
 created: '2026-08-05'
 modified: '2026-08-05'
 tags:
+- Artificial Intelligence
+- AI Inference
+- LLM
+- GPU Compute
+- Decentralized Compute
+- Blockchain
+- Web3
+- EVM
+- Decentralized Storage
+- Data Availability
+- OpenAI-Compatible
+- Trusted Execution Environment
+- agent-native
+- Crypto Infrastructure
+tags_raw:
 - artificial-intelligence
 - ai-inference
 - llm
@@ -69,6 +84,12 @@ apis:
   humanURL: https://docs.0g.ai/developer-hub/mainnet/mainnet-overview
   baseURL: https://evmrpc.0g.ai
   tags:
+  - Blockchain
+  - EVM
+  - Web3
+  - JSON-RPC
+  - Crypto Infrastructure
+  tags_raw:
   - blockchain
   - evm
   - web3
@@ -94,6 +115,12 @@ apis:
     is recorded rather than pointing one at a docs page or a localhost address; the contract here is the
     protobuf, not a vendor-operated endpoint.
   tags:
+  - Data Availability
+  - Blockchain
+  - Web3
+  - gRPC
+  - Crypto Infrastructure
+  tags_raw:
   - data-availability
   - blockchain
   - web3
@@ -119,6 +146,11 @@ apis:
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk
   baseURL: https://indexer-storage-turbo.0g.ai
   tags:
+  - Decentralized Storage
+  - Web3
+  - Blockchain
+  - Crypto Infrastructure
+  tags_raw:
   - decentralized-storage
   - web3
   - blockchain
@@ -168,6 +200,8 @@ apis:
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
   baseURL: https://router-api.0g.ai/v1
   tags:
+  - APIKeys
+  tags_raw:
   - API Key
   properties:
   - type: OpenAPI
