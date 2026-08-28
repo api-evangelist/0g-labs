@@ -15,6 +15,19 @@ description: >-
   account balance and usage, and API-key management. Authentication splits into billable `sk-` API
   keys for inference and scope-limited `mk-` management keys for account and key administration.
 url: https://raw.githubusercontent.com/api-evangelist/0g-labs/refs/heads/main/apis.yml
+deliveryModel:
+  model: unknown
+  open_source: unknown
+  commercial: true
+  callable_host: false
+  label: Delivery model not determined — needs a product licence on record
+  confidence: low
+  source:
+  - openapi
+  - pricing
+  - repository-unlicensed
+  generated: '2026-08-28'
+  method: derived
 image: https://cdn.prod.website-files.com/680b884d38733122a923739b/68269581b10a2233094e3208_Group%201171275720.webp
 x-type: company
 x-source: harvest:secondary-market
