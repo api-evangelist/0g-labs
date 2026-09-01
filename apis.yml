@@ -56,20 +56,20 @@ specificationVersion: '0.23'
 created: '2026-08-05'
 modified: '2026-08-05'
 tags:
-- artificial-intelligence
-- ai-inference
-- llm
-- gpu-compute
-- decentralized-compute
+- Artificial Intelligence
+- AI Inference
+- LLM
+- GPU Compute
+- Decentralized Compute
 - Blockchain
 - Web3
 - EVM
-- decentralized-storage
-- data-availability
-- openai-compatible
-- trusted-execution-environment
+- Decentralized Storage
+- Data Availability
+- OpenAI-Compatible
+- Trusted Execution Environment
 - agent-native
-- crypto-infrastructure
+- Crypto Infrastructure
 tags_raw:
 - artificial-intelligence
 - ai-inference
@@ -100,8 +100,8 @@ apis:
   - Blockchain
   - EVM
   - Web3
-  - json-rpc
-  - crypto-infrastructure
+  - JSON-RPC
+  - Crypto Infrastructure
   tags_raw:
   - blockchain
   - evm
@@ -128,11 +128,11 @@ apis:
     is recorded rather than pointing one at a docs page or a localhost address; the contract here is the
     protobuf, not a vendor-operated endpoint.
   tags:
-  - data-availability
+  - Data Availability
   - Blockchain
   - Web3
-  - grpc
-  - crypto-infrastructure
+  - gRPC
+  - Crypto Infrastructure
   tags_raw:
   - data-availability
   - blockchain
@@ -159,10 +159,10 @@ apis:
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/storage/sdk
   baseURL: https://indexer-storage-turbo.0g.ai
   tags:
-  - decentralized-storage
+  - Decentralized Storage
   - Web3
   - Blockchain
-  - crypto-infrastructure
+  - Crypto Infrastructure
   tags_raw:
   - decentralized-storage
   - web3
