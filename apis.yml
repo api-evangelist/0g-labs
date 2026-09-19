@@ -47,6 +47,9 @@ accessModel:
 image: https://cdn.prod.website-files.com/680b884d38733122a923739b/68269581b10a2233094e3208_Group%201171275720.webp
 x-type: company
 x-source: harvest:secondary-market
+x-docs-platform: docusaurus
+x-docs-platform-confidence: medium
+x-docs-platform-checked: 2026-09-17
 x-enrichment:
   date: '2026-08-05'
   status: enriched
@@ -321,6 +324,8 @@ apis:
   humanURL: https://docs.0g.ai/developer-hub/building-on-0g/compute-network/router/overview
   baseURL: https://router-api.0g.ai/v1
   tags:
+  - Providers
+  tags_raw:
   - Provider
   properties:
   - type: OpenAPI
