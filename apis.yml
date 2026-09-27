@@ -16,17 +16,21 @@ description: >-
   keys for inference and scope-limited `mk-` management keys for account and key administration.
 url: https://raw.githubusercontent.com/api-evangelist/0g-labs/refs/heads/main/apis.yml
 deliveryModel:
-  model: unknown
+  model: saas
+  license_evidence:
+    not_product:
+    - 0gfoundation/0g-da-client
+    - 0gfoundation/0g-storage-client
   open_source: unknown
   commercial: true
   callable_host: false
-  label: Delivery model not determined — needs a product licence on record
+  label: Hosted service · you call their endpoint
   confidence: low
   source:
   - openapi
   - pricing
-  - repository-unlicensed
-  generated: '2026-08-28'
+  - repository-not-product
+  generated: '2026-09-25'
   method: derived
 accessModel:
   pricing: unknown
@@ -76,7 +80,7 @@ created: '2026-08-05'
 modified: '2026-08-05'
 tags:
 - Artificial Intelligence
-- AI Inference
+- Inference
 - LLM
 - GPU Compute
 - Decentralized Compute
@@ -87,7 +91,7 @@ tags:
 - Data Availability
 - OpenAI-Compatible
 - Trusted Execution Environment
-- agent-native
+- Agent-Native
 - Crypto Infrastructure
 tags_raw:
 - artificial-intelligence
@@ -104,6 +108,7 @@ tags_raw:
 - trusted-execution-environment
 - agent-native
 - crypto-infrastructure
+- AI Inference
 apis:
 - name: 0G Chain JSON-RPC
   description: >-

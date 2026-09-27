@@ -198,28 +198,15 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+    github_com_0glabs_0g-router_pkg_response.RevokeAPIKeyResponse:
       type: object
       properties:
-        code:
+        key_id:
           type: string
-          example: bad_request
+          example: abc12345
         message:
           type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
-    github_com_0glabs_0g-router_pkg_response.APIKeyListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.APIKeyItem'
-        object:
-          type: string
-          example: list
+          example: API key revoked
     github_com_0glabs_0g-router_pkg_request.CreateAPIKeyRequest:
       type: object
       properties:
@@ -262,6 +249,141 @@ components:
             no "leave unchanged" semantics — absent / empty / explicit "" all mean
 
             "no pin".'
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_response.APIKeyListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.APIKeyItem'
+        object:
+          type: string
+          example: list
+    github_com_0glabs_0g-router_pkg_response.APIKeyItem:
+      type: object
+      properties:
+        allowed_models:
+          description: 'AllowedModels / AllowedProviders are ALWAYS present in the response
+
+            (never omitted) — `[]` means "no restriction", a non-empty slice
+
+            means "only these". Stable shape so clients can index without
+
+            `field !== undefined` guards, and so a missing field cleanly
+
+            signals "response truncated by middleware / bug" rather than "no
+
+            allowlist". csvToSlice in the service layer materialises an empty
+
+            slice (not nil) for the no-allowlist case to keep the contract.'
+          type: array
+          items:
+            type: string
+          example:
+          - '["glm-5"]'
+        allowed_providers:
+          type: array
+          items:
+            type: string
+          example:
+          - '["0xabc..."]'
+        created_at:
+          type: string
+          example: 2024-01-15 10:30:00+00:00
+        credit_limit:
+          type: string
+          example: '1.5'
+        currency:
+          description: 'Currency is the unit of CreditLimit / Used: "0g" (0G decimals) or "usd"
+
+            (USD decimals), following the account''s settlement mode. Without it a
+
+            client can''t tell whether "1.5" means 1.5 0G or $1.50.'
+          type: string
+          example: 0g
+        expires_at:
+          type: string
+          example: 2025-02-15 10:30:00+00:00
+        key_id:
+          type: string
+          example: abc12345
+        key_preview:
+          type: string
+          example: sk-abcde…
+        name:
+          type: string
+          example: my-api-key
+        reset_period:
+          type: string
+          example: monthly
+        revoked:
+          type: boolean
+          example: false
+        status:
+          description: active / revoked / expired
+          type: string
+          example: active
+        trust_mode:
+          description: 'TrustMode is the trust-tier pin for this key, or nil when the key
+
+            has no pin (matches the API-key constraint table verbatim). Emitted
+
+            as a pointer so callers can distinguish "no pin" from "pinned to
+
+            the empty string"; the latter is rejected at create time, so a nil
+
+            value is the only way the field is absent in practice.'
+          type: string
+          example: verified
+        used:
+          type: string
+          example: '0.42'
+    github_com_0glabs_0g-router_pkg_request.UpdateAPIKeyRequest:
+      type: object
+      properties:
+        allowed_models:
+          description: "AllowedModels / AllowedProviders sparse-PATCH sentinels:\n  nil               → unchanged\n  non-nil empty []  → clear the allowlist (no restriction)\n  non-nil non-empty → replace the allowlist\n\nPointer to slice (rather than slice) so we can distinguish \"leave\nalone\" from \"clear\", matching how Scopes is handled on mgmt keys."
+          type: array
+          items:
+            type: string
+        allowed_providers:
+          type: array
+          items:
+            type: string
+        credit_limit:
+          type: string
+        expiration:
+          type: string
+        name:
+          type: string
+        reset_period:
+          type: string
+        trust_mode:
+          description: 'TrustMode sparse-PATCH sentinels: nil → unchanged; "" → clear the
+
+            pin (key falls back to no trust-mode restriction); any of
+
+            standard|verified|private → set the pin.'
           type: string
     github_com_0glabs_0g-router_pkg_response.CreateAPIKeyResponse:
       type: object
@@ -311,128 +433,6 @@ components:
         key:
           description: Only shown once!
           type: string
-        key_id:
-          type: string
-          example: abc12345
-        key_preview:
-          type: string
-          example: sk-abcde…
-        name:
-          type: string
-          example: my-api-key
-        reset_period:
-          type: string
-          example: monthly
-        revoked:
-          type: boolean
-          example: false
-        status:
-          description: active / revoked / expired
-          type: string
-          example: active
-        trust_mode:
-          description: 'TrustMode is the trust-tier pin for this key, or nil when the key
-
-            has no pin (matches the API-key constraint table verbatim). Emitted
-
-            as a pointer so callers can distinguish "no pin" from "pinned to
-
-            the empty string"; the latter is rejected at create time, so a nil
-
-            value is the only way the field is absent in practice.'
-          type: string
-          example: verified
-        used:
-          type: string
-          example: '0.42'
-    github_com_0glabs_0g-router_pkg_response.RevokeAPIKeyResponse:
-      type: object
-      properties:
-        key_id:
-          type: string
-          example: abc12345
-        message:
-          type: string
-          example: API key revoked
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
-    github_com_0glabs_0g-router_pkg_request.UpdateAPIKeyRequest:
-      type: object
-      properties:
-        allowed_models:
-          description: "AllowedModels / AllowedProviders sparse-PATCH sentinels:\n  nil               → unchanged\n  non-nil empty []  → clear the allowlist (no restriction)\n  non-nil non-empty → replace the allowlist\n\nPointer to slice (rather than slice) so we can distinguish \"leave\nalone\" from \"clear\", matching how Scopes is handled on mgmt keys."
-          type: array
-          items:
-            type: string
-        allowed_providers:
-          type: array
-          items:
-            type: string
-        credit_limit:
-          type: string
-        expiration:
-          type: string
-        name:
-          type: string
-        reset_period:
-          type: string
-        trust_mode:
-          description: 'TrustMode sparse-PATCH sentinels: nil → unchanged; "" → clear the
-
-            pin (key falls back to no trust-mode restriction); any of
-
-            standard|verified|private → set the pin.'
-          type: string
-    github_com_0glabs_0g-router_pkg_response.APIKeyItem:
-      type: object
-      properties:
-        allowed_models:
-          description: 'AllowedModels / AllowedProviders are ALWAYS present in the response
-
-            (never omitted) — `[]` means "no restriction", a non-empty slice
-
-            means "only these". Stable shape so clients can index without
-
-            `field !== undefined` guards, and so a missing field cleanly
-
-            signals "response truncated by middleware / bug" rather than "no
-
-            allowlist". csvToSlice in the service layer materialises an empty
-
-            slice (not nil) for the no-allowlist case to keep the contract.'
-          type: array
-          items:
-            type: string
-          example:
-          - '["glm-5"]'
-        allowed_providers:
-          type: array
-          items:
-            type: string
-          example:
-          - '["0xabc..."]'
-        created_at:
-          type: string
-          example: 2024-01-15 10:30:00+00:00
-        credit_limit:
-          type: string
-          example: '1.5'
-        currency:
-          description: 'Currency is the unit of CreditLimit / Used: "0g" (0G decimals) or "usd"
-
-            (USD decimals), following the account''s settlement mode. Without it a
-
-            client can''t tell whether "1.5" means 1.5 0G or $1.50.'
-          type: string
-          example: 0g
-        expires_at:
-          type: string
-          example: 2025-02-15 10:30:00+00:00
         key_id:
           type: string
           example: abc12345

@@ -75,121 +75,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.ModelArchitecture:
-      type: object
-      properties:
-        input_modalities:
-          type: array
-          items:
-            type: string
-        instruct_type:
-          type: string
-        modality:
-          type: string
-        output_modalities:
-          type: array
-          items:
-            type: string
-        tokenizer:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ModelListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelEntry'
-        object:
-          type: string
-          example: list
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-          example: bad_request
-        message:
-          type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
-    github_com_0glabs_0g-router_pkg_response.ModelPriceVariant:
-      type: object
-      properties:
-        dimensions:
-          type: object
-          additionalProperties:
-            type: string
-        unit:
-          type: string
-        unit_price:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ModelPricing:
-      type: object
-      properties:
-        cache_write:
-          description: 'CacheWrite is the per-token price for writing a prompt token to the cache
-
-            (cache creation) at the default/5-minute TTL, i.e. prompt * write_multiplier.
-
-            [beta] Present only when the provider advertises a cache-write premium
-
-            (write_multiplier > 1) and features.cache_write_premium is enabled; omitted
-
-            otherwise.'
-          type: string
-        cache_write_1h:
-          description: 'CacheWrite1h is the per-token price for writing a prompt token to the cache
-
-            at the 1-hour TTL, i.e. prompt * write_1h_multiplier. [beta] Present only
-
-            when the provider advertises a distinct, valid 1-hour cache-write premium and
-
-            features.cache_write_premium is enabled; omitted otherwise (1-hour writes
-
-            then bill at CacheWrite, or the plain prompt rate when no premium applies).'
-          type: string
-        cached_prompt:
-          type: string
-        completion:
-          type: string
-        image:
-          type: string
-        prompt:
-          type: string
-        tiered_pricing:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelPricingTier'
-        variants:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelPriceVariant'
-        video:
-          description: 'Video is the flat per-effective-output-second price for a single-rate
-
-            video-generation model (wei in the native block, USD decimal in the USD
-
-            block). Variants supersedes it when the model prices by request shape
-
-            (resolution/duration) — see ModelPriceVariant. Both mirror the broker''s
-
-            /models pricing.video / pricing.variants so a video model shows a real
-
-            per-second/per-resolution price instead of a misleading per-token one.'
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ModelPricingTier:
-      type: object
-      properties:
-        cached_prompt:
-          type: string
-        completion:
-          type: string
-        max_input_tokens:
-          type: integer
-        prompt:
-          type: string
     github_com_0glabs_0g-router_pkg_response.ModelEntry:
       type: object
       properties:
@@ -255,6 +140,98 @@ components:
           type: string
         verifiability:
           type: string
+    github_com_0glabs_0g-router_pkg_response.ModelListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelEntry'
+        object:
+          type: string
+          example: list
+    github_com_0glabs_0g-router_pkg_response.ModelArchitecture:
+      type: object
+      properties:
+        input_modalities:
+          type: array
+          items:
+            type: string
+        instruct_type:
+          type: string
+        modality:
+          type: string
+        output_modalities:
+          type: array
+          items:
+            type: string
+        tokenizer:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ModelPriceVariant:
+      type: object
+      properties:
+        dimensions:
+          type: object
+          additionalProperties:
+            type: string
+        unit:
+          type: string
+        unit_price:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ModelPricing:
+      type: object
+      properties:
+        cache_write:
+          description: 'CacheWrite is the per-token price for writing a prompt token to the cache
+
+            (cache creation) at the default/5-minute TTL, i.e. prompt * write_multiplier.
+
+            [beta] Present only when the provider advertises a cache-write premium
+
+            (write_multiplier > 1) and features.cache_write_premium is enabled; omitted
+
+            otherwise.'
+          type: string
+        cache_write_1h:
+          description: 'CacheWrite1h is the per-token price for writing a prompt token to the cache
+
+            at the 1-hour TTL, i.e. prompt * write_1h_multiplier. [beta] Present only
+
+            when the provider advertises a distinct, valid 1-hour cache-write premium and
+
+            features.cache_write_premium is enabled; omitted otherwise (1-hour writes
+
+            then bill at CacheWrite, or the plain prompt rate when no premium applies).'
+          type: string
+        cached_prompt:
+          type: string
+        completion:
+          type: string
+        image:
+          type: string
+        prompt:
+          type: string
+        tiered_pricing:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelPricingTier'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelPriceVariant'
+        video:
+          description: 'Video is the flat per-effective-output-second price for a single-rate
+
+            video-generation model (wei in the native block, USD decimal in the USD
+
+            block). Variants supersedes it when the model prices by request shape
+
+            (resolution/duration) — see ModelPriceVariant. Both mirror the broker''s
+
+            /models pricing.video / pricing.variants so a video model shows a real
+
+            per-second/per-resolution price instead of a misleading per-token one.'
+          type: string
     github_com_0glabs_0g-router_pkg_response.ErrorResponse:
       type: object
       properties:
@@ -262,6 +239,29 @@ components:
           $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
         request_id:
           type: string
+    github_com_0glabs_0g-router_pkg_response.ModelPricingTier:
+      type: object
+      properties:
+        cached_prompt:
+          type: string
+        completion:
+          type: string
+        max_input_tokens:
+          type: integer
+        prompt:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
   securitySchemes:
     ApiKeyAuth:
       description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'

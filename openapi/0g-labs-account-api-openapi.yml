@@ -280,18 +280,34 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+    github_com_0glabs_0g-router_pkg_response.UsageStatsResponse:
       type: object
       properties:
-        code:
+        completion_tokens:
+          type: integer
+          example: 4345
+        currency:
+          description: 'Currency is the unit of TotalCost: "0g" (wei) or "usd" (micro-USD). The
+
+            figures are already filtered to a single currency (the account''s current
+
+            settlement mode), so a client renders TotalCost in this unit without a
+
+            second lookup and never mislabels wei as USD.'
           type: string
-          example: bad_request
-        message:
+          example: 0g
+        prompt_tokens:
+          type: integer
+          example: 8000
+        total_cost:
           type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
+          example: '1000000000000000'
+        total_requests:
+          type: integer
+          example: 42
+        total_tokens:
+          type: integer
+          example: 12345
     github_com_0glabs_0g-router_pkg_response.FundsResponse:
       type: object
       properties:
@@ -313,6 +329,30 @@ components:
         total:
           type: string
           example: '7390000000000000000'
+    github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds:
+      type: object
+      properties:
+        balance:
+          type: string
+          example: '7086440000000000000'
+        queried_at:
+          type: string
+          example: 2026-05-25 16:21:00+00:00
+        shared_across_products:
+          type: boolean
+          example: true
+    github_com_0glabs_0g-router_pkg_response.AccountResponse:
+      type: object
+      properties:
+        address:
+          type: string
+          example: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65'
+        created_at:
+          type: string
+          example: 2026-01-15 10:30:00+00:00
+        onboarded_at:
+          type: string
+          example: 2026-01-15 10:35:00+00:00
     github_com_0glabs_0g-router_pkg_response.DailyUsageResponse:
       type: object
       properties:
@@ -331,91 +371,28 @@ components:
         object:
           type: string
           example: list
-    github_com_0glabs_0g-router_pkg_response.DailyUsageSummaryEntry:
+    github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds:
       type: object
       properties:
-        cache_write_1h_tokens:
-          description: 'CacheWrite1hTokens is the 1-hour-TTL portion of cache_write_tokens summed
-
-            over the day (disjoint from it). Permanent; reflects volume, not billing. [beta]'
-          type: integer
-          x-stability: beta
-          example: 0
-        cache_write_tokens:
-          type: integer
-          x-stability: beta
-          example: 0
-        cached_tokens:
-          description: 'CachedTokens / CacheWriteTokens are the provider-reported cache-READ and
-
-            cache-WRITE (creation) subsets of input_tokens, summed over the day''s
-
-            rows. Permanent (survive usage_logs retention), so a monthly bill can
-
-            break out cache volume and reconcile `cost`. Both reflect volume, not
-
-            billing: cache_write_tokens is non-zero whenever a provider reported
-
-            cache-creation tokens and does NOT by itself imply a premium was charged
-
-            (the premium, when active, only changes how those tokens price into
-
-            `cost`). Disjoint subsets — input_tokens already includes both
-
-            (input_tokens = plain + cached_tokens + cache_write_tokens). [beta]'
-          type: integer
-          x-stability: beta
-          example: 3200
-        canonical_id:
-          description: 'CanonicalID is the registry-resolved model id this row aggregates.
-
-            Empty only for rows whose underlying on-chain model_id was never in
-
-            the registry (same '''' = "unmapped" sentinel as providers.canonical_id).
-
-            [beta]'
+        credit:
           type: string
-          x-stability: beta
-          example: glm-5
-        cost:
+          example: '3560000000000000'
+        deposit:
           type: string
-          example: '150000000000000'
-        date:
+          example: '300000000000000000'
+        pending_charge:
           type: string
-          example: 2024-01-15
-        input_tokens:
-          type: integer
-          example: 8000
-        model_id:
-          description: 'ModelID is preserved for one dual-emit milestone and carries the SAME
-
-            value as CanonicalID for /daily responses. Clients should migrate to
-
-            `canonical_id`; the field is dropped after migration.'
+          example: '0'
+        subtotal:
           type: string
-          example: glm-5
-        output_tokens:
-          type: integer
-          example: 4345
-        request_count:
-          type: integer
-          example: 42
-        trust_mode:
-          description: 'TrustMode is the trust tier this row aggregates. Emitted only when the
-
-            caller opts in with ?dimensions=trust_mode (and the capability is
-
-            enabled); omitted otherwise, so the default wire shape is one row per
-
-            (date, model) — byte-identical to pre-trust-mode prod regardless of the
-
-            server flag. When emitted, an empty string represents pre-trust-mode
-
-            legacy traffic (logs that predate the dimension); clients render it as
-
-            "Unknown" or filter the series out.'
+          example: '303560000000000000'
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
           type: string
-          example: verified
     github_com_0glabs_0g-router_pkg_response.UsageLogEntry:
       type: object
       properties:
@@ -515,80 +492,18 @@ components:
             either a tier name or ''''.'
           type: string
           example: verified
-    github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds:
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
       type: object
       properties:
-        credit:
+        code:
           type: string
-          example: '3560000000000000'
-        deposit:
+          example: bad_request
+        message:
           type: string
-          example: '300000000000000000'
-        pending_charge:
+          example: Invalid request
+        type:
           type: string
-          example: '0'
-        subtotal:
-          type: string
-          example: '303560000000000000'
-    github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds:
-      type: object
-      properties:
-        balance:
-          type: string
-          example: '7086440000000000000'
-        queried_at:
-          type: string
-          example: 2026-05-25 16:21:00+00:00
-        shared_across_products:
-          type: boolean
-          example: true
-    github_com_0glabs_0g-router_pkg_response.UsageStatsResponse:
-      type: object
-      properties:
-        completion_tokens:
-          type: integer
-          example: 4345
-        currency:
-          description: 'Currency is the unit of TotalCost: "0g" (wei) or "usd" (micro-USD). The
-
-            figures are already filtered to a single currency (the account''s current
-
-            settlement mode), so a client renders TotalCost in this unit without a
-
-            second lookup and never mislabels wei as USD.'
-          type: string
-          example: 0g
-        prompt_tokens:
-          type: integer
-          example: 8000
-        total_cost:
-          type: string
-          example: '1000000000000000'
-        total_requests:
-          type: integer
-          example: 42
-        total_tokens:
-          type: integer
-          example: 12345
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.AccountResponse:
-      type: object
-      properties:
-        address:
-          type: string
-          example: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65'
-        created_at:
-          type: string
-          example: 2026-01-15 10:30:00+00:00
-        onboarded_at:
-          type: string
-          example: 2026-01-15 10:35:00+00:00
+          example: invalid_request
     github_com_0glabs_0g-router_pkg_response.UsageHistoryResponse:
       type: object
       properties:
@@ -625,6 +540,91 @@ components:
             paging by cursor). Pointer + omitempty so absence is unambiguous.'
           type: integer
           example: 100
+    github_com_0glabs_0g-router_pkg_response.DailyUsageSummaryEntry:
+      type: object
+      properties:
+        cache_write_1h_tokens:
+          description: 'CacheWrite1hTokens is the 1-hour-TTL portion of cache_write_tokens summed
+
+            over the day (disjoint from it). Permanent; reflects volume, not billing. [beta]'
+          type: integer
+          x-stability: beta
+          example: 0
+        cache_write_tokens:
+          type: integer
+          x-stability: beta
+          example: 0
+        cached_tokens:
+          description: 'CachedTokens / CacheWriteTokens are the provider-reported cache-READ and
+
+            cache-WRITE (creation) subsets of input_tokens, summed over the day''s
+
+            rows. Permanent (survive usage_logs retention), so a monthly bill can
+
+            break out cache volume and reconcile `cost`. Both reflect volume, not
+
+            billing: cache_write_tokens is non-zero whenever a provider reported
+
+            cache-creation tokens and does NOT by itself imply a premium was charged
+
+            (the premium, when active, only changes how those tokens price into
+
+            `cost`). Disjoint subsets — input_tokens already includes both
+
+            (input_tokens = plain + cached_tokens + cache_write_tokens). [beta]'
+          type: integer
+          x-stability: beta
+          example: 3200
+        canonical_id:
+          description: 'CanonicalID is the registry-resolved model id this row aggregates.
+
+            Empty only for rows whose underlying on-chain model_id was never in
+
+            the registry (same '''' = "unmapped" sentinel as providers.canonical_id).
+
+            [beta]'
+          type: string
+          x-stability: beta
+          example: glm-5
+        cost:
+          type: string
+          example: '150000000000000'
+        date:
+          type: string
+          example: 2024-01-15
+        input_tokens:
+          type: integer
+          example: 8000
+        model_id:
+          description: 'ModelID is preserved for one dual-emit milestone and carries the SAME
+
+            value as CanonicalID for /daily responses. Clients should migrate to
+
+            `canonical_id`; the field is dropped after migration.'
+          type: string
+          example: glm-5
+        output_tokens:
+          type: integer
+          example: 4345
+        request_count:
+          type: integer
+          example: 42
+        trust_mode:
+          description: 'TrustMode is the trust tier this row aggregates. Emitted only when the
+
+            caller opts in with ?dimensions=trust_mode (and the capability is
+
+            enabled); omitted otherwise, so the default wire shape is one row per
+
+            (date, model) — byte-identical to pre-trust-mode prod regardless of the
+
+            server flag. When emitted, an empty string represents pre-trust-mode
+
+            legacy traffic (logs that predate the dimension); clients render it as
+
+            "Unknown" or filter the series out.'
+          type: string
+          example: verified
   securitySchemes:
     ApiKeyAuth:
       description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'
