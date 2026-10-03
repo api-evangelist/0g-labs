@@ -36,6 +36,23 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ServiceTypeListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ServiceTypeEntry'
+        object:
+          type: string
+          example: list
     github_com_0glabs_0g-router_pkg_response.ErrorDetail:
       type: object
       properties:
@@ -60,23 +77,6 @@ components:
         type:
           type: string
           example: chatbot
-    github_com_0glabs_0g-router_pkg_response.ServiceTypeListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ServiceTypeEntry'
-        object:
-          type: string
-          example: list
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
   securitySchemes:
     ApiKeyAuth:
       description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'

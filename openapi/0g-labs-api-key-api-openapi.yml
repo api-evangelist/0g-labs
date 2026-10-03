@@ -198,87 +198,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.RevokeAPIKeyResponse:
-      type: object
-      properties:
-        key_id:
-          type: string
-          example: abc12345
-        message:
-          type: string
-          example: API key revoked
-    github_com_0glabs_0g-router_pkg_request.CreateAPIKeyRequest:
-      type: object
-      properties:
-        allowed_models:
-          description: 'AllowedModels is an optional allowlist of model IDs this key may
-
-            invoke. Nil = no restriction. Empty slice = explicit empty list,
-
-            rejected at validation (a key that can call no models is useless).'
-          type: array
-          items:
-            type: string
-        allowed_providers:
-          description: 'AllowedProviders is an optional allowlist of provider addresses
-
-            (hex, 0x-prefixed) this key may target. Same nil-vs-empty convention
-
-            as AllowedModels.'
-          type: array
-          items:
-            type: string
-        credit_limit:
-          description: 0G units; nil = unlimited
-          type: string
-        expiration:
-          description: RFC3339, "no_expiration", or ""
-          type: string
-        name:
-          type: string
-        reset_period:
-          description: never/daily/weekly/monthly; "" → never
-          type: string
-        trust_mode:
-          description: 'TrustMode optionally pins this key to a single trust tier. Accepted
-
-            values: "standard" | "verified" | "private" | "" (no pin). The wire
-
-            shape is a value type rather than a pointer because the create path has
-
-            no "leave unchanged" semantics — absent / empty / explicit "" all mean
-
-            "no pin".'
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-          example: bad_request
-        message:
-          type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
-    github_com_0glabs_0g-router_pkg_response.APIKeyListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.APIKeyItem'
-        object:
-          type: string
-          example: list
     github_com_0glabs_0g-router_pkg_response.APIKeyItem:
       type: object
       properties:
@@ -358,6 +277,16 @@ components:
         used:
           type: string
           example: '0.42'
+    github_com_0glabs_0g-router_pkg_response.APIKeyListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.APIKeyItem'
+        object:
+          type: string
+          example: list
     github_com_0glabs_0g-router_pkg_request.UpdateAPIKeyRequest:
       type: object
       properties:
@@ -467,6 +396,77 @@ components:
         used:
           type: string
           example: '0.42'
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.RevokeAPIKeyResponse:
+      type: object
+      properties:
+        key_id:
+          type: string
+          example: abc12345
+        message:
+          type: string
+          example: API key revoked
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_request.CreateAPIKeyRequest:
+      type: object
+      properties:
+        allowed_models:
+          description: 'AllowedModels is an optional allowlist of model IDs this key may
+
+            invoke. Nil = no restriction. Empty slice = explicit empty list,
+
+            rejected at validation (a key that can call no models is useless).'
+          type: array
+          items:
+            type: string
+        allowed_providers:
+          description: 'AllowedProviders is an optional allowlist of provider addresses
+
+            (hex, 0x-prefixed) this key may target. Same nil-vs-empty convention
+
+            as AllowedModels.'
+          type: array
+          items:
+            type: string
+        credit_limit:
+          description: 0G units; nil = unlimited
+          type: string
+        expiration:
+          description: RFC3339, "no_expiration", or ""
+          type: string
+        name:
+          type: string
+        reset_period:
+          description: never/daily/weekly/monthly; "" → never
+          type: string
+        trust_mode:
+          description: 'TrustMode optionally pins this key to a single trust tier. Accepted
+
+            values: "standard" | "verified" | "private" | "" (no pin). The wire
+
+            shape is a value type rather than a pointer because the create path has
+
+            no "leave unchanged" semantics — absent / empty / explicit "" all mean
+
+            "no pin".'
+          type: string
   securitySchemes:
     ApiKeyAuth:
       description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'

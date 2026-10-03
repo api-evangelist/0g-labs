@@ -958,6 +958,15 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
+    internal_handler.RoutePreviewRequest:
+      type: object
+      properties:
+        model:
+          description: 'OPTIONAL: canonical id (or alias / on-chain id); empty = any provider of this service type'
+          type: string
+        service_type:
+          description: chatbot | text-to-image | image-editing | speech-to-text
+          type: string
     internal_handler.RoutePreviewResponse:
       type: object
       properties:
@@ -982,91 +991,43 @@ components:
           type: integer
         output_tokens:
           type: integer
-    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionResponse:
+    github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock:
       type: object
       properties:
-        duration:
-          description: Audio duration (seconds)
-          type: number
-          example: 5.5
+        id:
+          description: tool_use fields
+          type: string
+        input: {}
+        name:
+          type: string
+        text:
+          type: string
+        type:
+          description: '"text", "tool_use", etc.'
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionRequest:
+      type: object
+      properties:
+        file_base64:
+          description: Base64 encoded audio file
+          type: string
+          example: SGVsbG8gd29ybGQ=
+        filename:
+          description: Filename
+          type: string
+          example: audio.mp3
         language:
-          description: Detected language
+          description: Audio language
           type: string
           example: en
-        text:
-          description: Transcribed text
+        model:
+          description: Model ID
           type: string
-          example: Hello, world!
-    github_com_0glabs_0g-router_pkg_inference.ToolFunction:
-      type: object
-      properties:
-        description:
-          description: Function description
+          example: whisper-1
+        response_format:
+          description: Response format
           type: string
-          example: Get weather
-        name:
-          description: Function name
-          type: string
-          example: get_weather
-        parameters:
-          description: JSON Schema for parameters
-    github_com_0glabs_0g-router_pkg_inference.AnthropicCacheCreation:
-      type: object
-      properties:
-        ephemeral_1h_input_tokens:
-          type: integer
-        ephemeral_5m_input_tokens:
-          type: integer
-    internal_handler.RoutePreviewCandidate:
-      type: object
-      properties:
-        address:
-          type: string
-        canonical_id:
-          type: string
-        endpoint:
-          type: string
-        model_id:
-          type: string
-    github_com_0glabs_0g-router_pkg_inference.ChatMessage:
-      type: object
-      properties:
-        content:
-          description: Message content
-          type: string
-          example: Hello!
-        role:
-          description: 'Role: system, user, assistant'
-          type: string
-          example: user
-    github_com_0glabs_0g-router_pkg_inference.Choice:
-      type: object
-      properties:
-        delta:
-          description: Delta content (streaming)
-          allOf:
-          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.DeltaMessage'
-        finish_reason:
-          description: Finish reason
-          type: string
-          example: stop
-        index:
-          description: Choice index
-          type: integer
-          example: 0
-        message:
-          description: Message content (non-streaming)
-          allOf:
-          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ChatMessage'
-    github_com_0glabs_0g-router_pkg_inference.RequestMessage:
-      type: object
-      properties:
-        content:
-          type: string
-          example: Hello!
-        role:
-          type: string
-          example: user
+          example: json
     github_com_0glabs_0g-router_pkg_inference.ChatCompletionRequest:
       type: object
       properties:
@@ -1120,18 +1081,6 @@ components:
           description: Top-p sampling parameter
           type: number
           example: 0.9
-    github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails:
-      type: object
-      properties:
-        cache_write_1h_tokens:
-          description: 1-hour-TTL portion of the cache-write tokens
-          type: integer
-        cache_write_tokens:
-          description: Default/5-minute subset of PromptTokens written to prompt cache (creation)
-          type: integer
-        cached_tokens:
-          description: Subset of PromptTokens served from prompt cache (read)
-          type: integer
     github_com_0glabs_0g-router_pkg_inference.ChatCompletionResponseWithTrace:
       type: object
       properties:
@@ -1164,48 +1113,45 @@ components:
           description: 0G trace info
           allOf:
           - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.TraceInfo'
-    github_com_0glabs_0g-router_pkg_inference.BillingInfo:
+    github_com_0glabs_0g-router_pkg_inference.Choice:
       type: object
       properties:
-        currency:
-          description: 'Currency is the unit of the cost fields: "0g" (wei) or "usd" (micro-USD),
-
-            matching the account''s settlement mode. Omitted on the wire for 0G traces
-
-            (empty → the historical wei default), so the field is additive.'
+        delta:
+          description: Delta content (streaming)
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.DeltaMessage'
+        finish_reason:
+          description: Finish reason
           type: string
-          example: usd
-        input_cost:
-          description: Input cost
-          type: string
-          example: '0.00001'
-        output_cost:
-          description: Output cost
-          type: string
-          example: '0.00002'
-        total_cost:
-          description: Total cost
-          type: string
-          example: '0.00003'
-    github_com_0glabs_0g-router_pkg_inference.ProviderPreferences:
+          example: stop
+        index:
+          description: Choice index
+          type: integer
+          example: 0
+        message:
+          description: Message content (non-streaming)
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ChatMessage'
+    github_com_0glabs_0g-router_pkg_inference.RequestMessage:
       type: object
       properties:
-        address:
-          description: Route to a specific provider address
+        content:
           type: string
-          example: 0x1234...
-        allow_fallbacks:
-          description: 'Allow fallback to other providers on failure (default: true, false when address is set)'
-          type: boolean
-          example: true
-        sort:
-          description: 'Sort strategy: "latency" or "price" (default: price — cheapest healthy provider)'
+          example: Hello!
+        role:
           type: string
-          example: latency
-        trust_mode:
-          description: 'Trust tier filter: "verified" | "private" (empty = no preference). A "verified" filter also accepts "private" providers, since private (native TeeML) provides verifiability plus privacy.'
+          example: user
+    github_com_0glabs_0g-router_pkg_inference.ChatMessage:
+      type: object
+      properties:
+        content:
+          description: Message content
           type: string
-          example: verified
+          example: Hello!
+        role:
+          description: 'Role: system, user, assistant'
+          type: string
+          example: user
     github_com_0glabs_0g-router_pkg_inference.ImageGenerationResponse:
       type: object
       properties:
@@ -1218,74 +1164,38 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.ImageData'
-    github_com_0glabs_0g-router_pkg_inference.Usage:
+    github_com_0glabs_0g-router_pkg_inference.ImageData:
       type: object
       properties:
-        completion_tokens:
-          description: Output tokens
-          type: integer
-          example: 20
-        prompt_tokens:
-          description: Input tokens
-          type: integer
-          example: 10
-        prompt_tokens_details:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails'
-        total_tokens:
-          description: Total tokens
-          type: integer
-          example: 30
-    github_com_0glabs_0g-router_pkg_inference.ResponseFormat:
-      type: object
-      properties:
-        json_schema:
-          description: 'Required when type is "json_schema": {name, schema, strict?}'
-        type:
-          description: '"text", "json_object", or "json_schema"'
+        b64_json:
+          description: Base64 encoded image data
           type: string
-          example: json_schema
-    github_com_0glabs_0g-router_pkg_inference.AnthropicResponse:
+        revised_prompt:
+          description: Revised prompt
+          type: string
+          example: A sunset..
+        url:
+          description: Image URL
+          type: string
+          example: https://...
+    github_com_0glabs_0g-router_pkg_inference.DeltaMessage:
       type: object
       properties:
         content:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock'
-        id:
           type: string
-        model:
+        reasoning:
+          description: 'Reasoning carries the raw `delta.reasoning` field some providers emit
+
+            before NormalizeReasoningSSELine mirrors it into ReasoningContent.
+
+            Captured here so the upstream parser can count reasoning tokens for
+
+            the streaming-disconnect fallback (issue #190).'
+          type: string
+        reasoning_content:
           type: string
         role:
-          description: '"assistant"'
           type: string
-        stop_reason:
-          type: string
-        type:
-          description: '"message"'
-          type: string
-        usage:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicUsage'
-    github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock:
-      type: object
-      properties:
-        id:
-          description: tool_use fields
-          type: string
-        input: {}
-        name:
-          type: string
-        text:
-          type: string
-        type:
-          description: '"text", "tool_use", etc.'
-          type: string
-    github_com_0glabs_0g-router_pkg_inference.Plugin:
-      type: object
-      properties:
-        id:
-          description: Plugin ID ("web" for web search)
-          type: string
-          example: web
     github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest:
       type: object
       properties:
@@ -1309,79 +1219,37 @@ components:
           description: Image size
           type: string
           example: 1024x1024
-    github_com_0glabs_0g-router_pkg_inference.TraceInfo:
+    github_com_0glabs_0g-router_pkg_inference.AnthropicCacheCreation:
       type: object
       properties:
-        billing:
-          description: 'Billing is a pointer + omitempty so it is genuinely OMITTED (not emitted as
-
-            {"input_cost":"","output_cost":"","total_cost":""}) when the cost couldn''t
-
-            be computed — a mode-read/pricing error or missing billing service. The
-
-            success path always sets it, so the normal wire shape is unchanged.'
-          allOf:
-          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.BillingInfo'
-        provider:
-          description: Provider address
-          type: string
-          example: 0x1234...
-        request_id:
-          description: Request ID
-          type: string
-          example: req_abc123
-        tee_verified:
-          description: 'TEE verification: nil=not requested, true=verified, false=failed'
-          type: boolean
-    github_com_0glabs_0g-router_pkg_inference.ImageData:
+        ephemeral_1h_input_tokens:
+          type: integer
+        ephemeral_5m_input_tokens:
+          type: integer
+    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionResponse:
       type: object
       properties:
-        b64_json:
-          description: Base64 encoded image data
-          type: string
-        revised_prompt:
-          description: Revised prompt
-          type: string
-          example: A sunset..
-        url:
-          description: Image URL
-          type: string
-          example: https://...
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-          example: bad_request
-        message:
-          type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
-    github_com_0glabs_0g-router_pkg_inference.AudioTranscriptionRequest:
-      type: object
-      properties:
-        file_base64:
-          description: Base64 encoded audio file
-          type: string
-          example: SGVsbG8gd29ybGQ=
-        filename:
-          description: Filename
-          type: string
-          example: audio.mp3
+        duration:
+          description: Audio duration (seconds)
+          type: number
+          example: 5.5
         language:
-          description: Audio language
+          description: Detected language
           type: string
           example: en
-        model:
-          description: Model ID
+        text:
+          description: Transcribed text
           type: string
-          example: whisper-1
-        response_format:
-          description: Response format
+          example: Hello, world!
+    github_com_0glabs_0g-router_pkg_inference.ResponseFormat:
+      type: object
+      properties:
+        json_schema:
+          description: 'Required when type is "json_schema": {name, schema, strict?}'
+        type:
+          description: '"text", "json_object", or "json_schema"'
           type: string
-          example: json
+          example: json_schema
     github_com_0glabs_0g-router_pkg_inference.AnthropicRequest:
       type: object
       properties:
@@ -1423,6 +1291,18 @@ components:
           type: integer
         top_p:
           type: number
+    github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails:
+      type: object
+      properties:
+        cache_write_1h_tokens:
+          description: 1-hour-TTL portion of the cache-write tokens
+          type: integer
+        cache_write_tokens:
+          description: Default/5-minute subset of PromptTokens written to prompt cache (creation)
+          type: integer
+        cached_tokens:
+          description: Subset of PromptTokens served from prompt cache (read)
+          type: integer
     github_com_0glabs_0g-router_pkg_inference.Attachment:
       type: object
       properties:
@@ -1430,15 +1310,113 @@ components:
           description: File ID from upload endpoint
           type: string
           example: file-abc123
-    internal_handler.RoutePreviewRequest:
+    github_com_0glabs_0g-router_pkg_inference.Plugin:
       type: object
       properties:
+        id:
+          description: Plugin ID ("web" for web search)
+          type: string
+          example: web
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.BillingInfo:
+      type: object
+      properties:
+        currency:
+          description: 'Currency is the unit of the cost fields: "0g" (wei) or "usd" (micro-USD),
+
+            matching the account''s settlement mode. Omitted on the wire for 0G traces
+
+            (empty → the historical wei default), so the field is additive.'
+          type: string
+          example: usd
+        input_cost:
+          description: Input cost
+          type: string
+          example: '0.00001'
+        output_cost:
+          description: Output cost
+          type: string
+          example: '0.00002'
+        total_cost:
+          description: Total cost
+          type: string
+          example: '0.00003'
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_inference.TraceInfo:
+      type: object
+      properties:
+        billing:
+          description: 'Billing is a pointer + omitempty so it is genuinely OMITTED (not emitted as
+
+            {"input_cost":"","output_cost":"","total_cost":""}) when the cost couldn''t
+
+            be computed — a mode-read/pricing error or missing billing service. The
+
+            success path always sets it, so the normal wire shape is unchanged.'
+          allOf:
+          - $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.BillingInfo'
+        provider:
+          description: Provider address
+          type: string
+          example: 0x1234...
+        request_id:
+          description: Request ID
+          type: string
+          example: req_abc123
+        tee_verified:
+          description: 'TEE verification: nil=not requested, true=verified, false=failed'
+          type: boolean
+    github_com_0glabs_0g-router_pkg_inference.AnthropicResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicContentBlock'
+        id:
+          type: string
         model:
-          description: 'OPTIONAL: canonical id (or alias / on-chain id); empty = any provider of this service type'
           type: string
-        service_type:
-          description: chatbot | text-to-image | image-editing | speech-to-text
+        role:
+          description: '"assistant"'
           type: string
+        stop_reason:
+          type: string
+        type:
+          description: '"message"'
+          type: string
+        usage:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.AnthropicUsage'
+    github_com_0glabs_0g-router_pkg_inference.ToolFunction:
+      type: object
+      properties:
+        description:
+          description: Function description
+          type: string
+          example: Get weather
+        name:
+          description: Function name
+          type: string
+          example: get_weather
+        parameters:
+          description: JSON Schema for parameters
     github_com_0glabs_0g-router_pkg_inference.Tool:
       type: object
       properties:
@@ -1450,31 +1428,53 @@ components:
           description: Tool type (currently only "function")
           type: string
           example: function
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+    internal_handler.RoutePreviewCandidate:
       type: object
       properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
+        address:
           type: string
-    github_com_0glabs_0g-router_pkg_inference.DeltaMessage:
+        canonical_id:
+          type: string
+        endpoint:
+          type: string
+        model_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_inference.ProviderPreferences:
       type: object
       properties:
-        content:
+        address:
+          description: Route to a specific provider address
           type: string
-        reasoning:
-          description: 'Reasoning carries the raw `delta.reasoning` field some providers emit
-
-            before NormalizeReasoningSSELine mirrors it into ReasoningContent.
-
-            Captured here so the upstream parser can count reasoning tokens for
-
-            the streaming-disconnect fallback (issue #190).'
+          example: 0x1234...
+        allow_fallbacks:
+          description: 'Allow fallback to other providers on failure (default: true, false when address is set)'
+          type: boolean
+          example: true
+        sort:
+          description: 'Sort strategy: "latency" or "price" (default: price — cheapest healthy provider)'
           type: string
-        reasoning_content:
+          example: latency
+        trust_mode:
+          description: 'Trust tier filter: "verified" | "private" (empty = no preference). A "verified" filter also accepts "private" providers, since private (native TeeML) provides verifiability plus privacy.'
           type: string
-        role:
-          type: string
+          example: verified
+    github_com_0glabs_0g-router_pkg_inference.Usage:
+      type: object
+      properties:
+        completion_tokens:
+          description: Output tokens
+          type: integer
+          example: 20
+        prompt_tokens:
+          description: Input tokens
+          type: integer
+          example: 10
+        prompt_tokens_details:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_inference.PromptTokensDetails'
+        total_tokens:
+          description: Total tokens
+          type: integer
+          example: 30
   requestBodies:
     github_com_0glabs_0g-router_pkg_inference.ImageGenerationRequest:
       content:
