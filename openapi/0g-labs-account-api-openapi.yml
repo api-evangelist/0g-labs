@@ -280,33 +280,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds:
-      type: object
-      properties:
-        balance:
-          type: string
-          example: '7086440000000000000'
-        queried_at:
-          type: string
-          example: 2026-05-25 16:21:00+00:00
-        shared_across_products:
-          type: boolean
-          example: true
-    github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds:
-      type: object
-      properties:
-        credit:
-          type: string
-          example: '3560000000000000'
-        deposit:
-          type: string
-          example: '300000000000000000'
-        pending_charge:
-          type: string
-          example: '0'
-        subtotal:
-          type: string
-          example: '303560000000000000'
     github_com_0glabs_0g-router_pkg_response.AccountResponse:
       type: object
       properties:
@@ -319,45 +292,6 @@ components:
         onboarded_at:
           type: string
           example: 2026-01-15 10:35:00+00:00
-    github_com_0glabs_0g-router_pkg_response.FundsResponse:
-      type: object
-      properties:
-        address:
-          type: string
-          example: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65'
-        currency:
-          description: 'Currency is the unit of all amount fields: "0g" (wei, default) or "usd"
-
-            (micro-USD). In USD mode there is no vault, so payment_layer.balance is
-
-            "0" and total = router.subtotal = balance + credit. [beta]'
-          type: string
-          example: 0g
-        payment_layer:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds'
-        router:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds'
-        total:
-          type: string
-          example: '7390000000000000000'
-    github_com_0glabs_0g-router_pkg_response.DailyUsageResponse:
-      type: object
-      properties:
-        currency:
-          description: 'Currency is the unit of each row''s cost: "0g" (wei) or "usd" (micro-USD).
-
-            The series is filtered to a single currency (the account''s current
-
-            settlement mode for /account; "0g" for the partner /source endpoint).'
-          type: string
-          example: 0g
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.DailyUsageSummaryEntry'
-        object:
-          type: string
-          example: list
     github_com_0glabs_0g-router_pkg_response.DailyUsageSummaryEntry:
       type: object
       properties:
@@ -443,6 +377,127 @@ components:
             "Unknown" or filter the series out.'
           type: string
           example: verified
+    github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds:
+      type: object
+      properties:
+        credit:
+          type: string
+          example: '3560000000000000'
+        deposit:
+          type: string
+          example: '300000000000000000'
+        pending_charge:
+          type: string
+          example: '0'
+        subtotal:
+          type: string
+          example: '303560000000000000'
+    github_com_0glabs_0g-router_pkg_response.UsageHistoryResponse:
+      type: object
+      properties:
+        currency:
+          description: 'Currency is the unit of each row''s cost/*_used fields: "0g" (wei) or "usd"
+
+            (micro-USD). The list is filtered to a single currency (the account''s
+
+            current settlement mode), so all rows share this unit.'
+          type: string
+          example: 0g
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.UsageLogEntry'
+        limit:
+          type: integer
+          example: 20
+        next_cursor:
+          description: 'NextCursor is the opaque token to fetch the next page via `?cursor=`.
+
+            Absent on the last page. [beta]'
+          type: string
+          x-stability: beta
+        object:
+          type: string
+          example: list
+        offset:
+          type: integer
+          example: 0
+        total:
+          description: 'Total is the full-set count. Omitted when include_total=false (or when
+
+            paging by cursor). Pointer + omitempty so absence is unambiguous.'
+          type: integer
+          example: 100
+    github_com_0glabs_0g-router_pkg_response.FundsResponse:
+      type: object
+      properties:
+        address:
+          type: string
+          example: '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65'
+        currency:
+          description: 'Currency is the unit of all amount fields: "0g" (wei, default) or "usd"
+
+            (micro-USD). In USD mode there is no vault, so payment_layer.balance is
+
+            "0" and total = router.subtotal = balance + credit. [beta]'
+          type: string
+          example: 0g
+        payment_layer:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds'
+        router:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.RouterLedgerFunds'
+        total:
+          type: string
+          example: '7390000000000000000'
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.DailyUsageResponse:
+      type: object
+      properties:
+        currency:
+          description: 'Currency is the unit of each row''s cost: "0g" (wei) or "usd" (micro-USD).
+
+            The series is filtered to a single currency (the account''s current
+
+            settlement mode for /account; "0g" for the partner /source endpoint).'
+          type: string
+          example: 0g
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.DailyUsageSummaryEntry'
+        object:
+          type: string
+          example: list
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_response.PaymentLayerFunds:
+      type: object
+      properties:
+        balance:
+          type: string
+          example: '7086440000000000000'
+        queried_at:
+          type: string
+          example: 2026-05-25 16:21:00+00:00
+        shared_across_products:
+          type: boolean
+          example: true
     github_com_0glabs_0g-router_pkg_response.UsageLogEntry:
       type: object
       properties:
@@ -542,61 +597,6 @@ components:
             either a tier name or ''''.'
           type: string
           example: verified
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.UsageHistoryResponse:
-      type: object
-      properties:
-        currency:
-          description: 'Currency is the unit of each row''s cost/*_used fields: "0g" (wei) or "usd"
-
-            (micro-USD). The list is filtered to a single currency (the account''s
-
-            current settlement mode), so all rows share this unit.'
-          type: string
-          example: 0g
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.UsageLogEntry'
-        limit:
-          type: integer
-          example: 20
-        next_cursor:
-          description: 'NextCursor is the opaque token to fetch the next page via `?cursor=`.
-
-            Absent on the last page. [beta]'
-          type: string
-          x-stability: beta
-        object:
-          type: string
-          example: list
-        offset:
-          type: integer
-          example: 0
-        total:
-          description: 'Total is the full-set count. Omitted when include_total=false (or when
-
-            paging by cursor). Pointer + omitempty so absence is unambiguous.'
-          type: integer
-          example: 100
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-          example: bad_request
-        message:
-          type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
     github_com_0glabs_0g-router_pkg_response.UsageStatsResponse:
       type: object
       properties:
