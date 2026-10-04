@@ -391,6 +391,9 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: CapabilityMap
+  url: capabilities/0g-labs-capability-edges.yml
+  name: 0G Labs Business Capability Map
 - type: IssueTracker
   url: https://github.com/0gfoundation/0g-da-client/issues
 - type: Releases
