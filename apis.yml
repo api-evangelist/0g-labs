@@ -77,7 +77,7 @@ x-coverage:
   checked: '2026-08-05'
 specificationVersion: '0.23'
 created: '2026-08-05'
-modified: '2026-08-05'
+modified: '2026-10-06'
 tags:
 - Artificial Intelligence
 - Inference
@@ -391,6 +391,8 @@ maintainers:
 - FN: APIs.json
   email: info@apis.io
 common:
+- url: https://0g.ai/blog/rss.xml
+  type: BlogRSS
 - type: CapabilityMap
   url: capabilities/0g-labs-capability-edges.yml
   name: 0G Labs Business Capability Map
