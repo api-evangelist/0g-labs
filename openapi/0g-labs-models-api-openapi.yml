@@ -75,45 +75,6 @@ paths:
       x-operation-id-source: derived
 components:
   schemas:
-    github_com_0glabs_0g-router_pkg_response.ModelListResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelEntry'
-        object:
-          type: string
-          example: list
-    github_com_0glabs_0g-router_pkg_response.ModelPricingTier:
-      type: object
-      properties:
-        cached_prompt:
-          type: string
-        completion:
-          type: string
-        max_input_tokens:
-          type: integer
-        prompt:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ModelPriceVariant:
-      type: object
-      properties:
-        dimensions:
-          type: object
-          additionalProperties:
-            type: string
-        unit:
-          type: string
-        unit_price:
-          type: string
-    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
-      type: object
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
-        request_id:
-          type: string
     github_com_0glabs_0g-router_pkg_response.ModelArchitecture:
       type: object
       properties:
@@ -131,18 +92,6 @@ components:
             type: string
         tokenizer:
           type: string
-    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
-      type: object
-      properties:
-        code:
-          type: string
-          example: bad_request
-        message:
-          type: string
-          example: Invalid request
-        type:
-          type: string
-          example: invalid_request
     github_com_0glabs_0g-router_pkg_response.ModelPricing:
       type: object
       properties:
@@ -196,6 +145,36 @@ components:
             /models pricing.video / pricing.variants so a video model shows a real
 
             per-second/per-resolution price instead of a misleading per-token one.'
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ModelPricingTier:
+      type: object
+      properties:
+        cached_prompt:
+          type: string
+        completion:
+          type: string
+        max_input_tokens:
+          type: integer
+        prompt:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ErrorDetail:
+      type: object
+      properties:
+        code:
+          type: string
+          example: bad_request
+        message:
+          type: string
+          example: Invalid request
+        type:
+          type: string
+          example: invalid_request
+    github_com_0glabs_0g-router_pkg_response.ErrorResponse:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ErrorDetail'
+        request_id:
           type: string
     github_com_0glabs_0g-router_pkg_response.ModelEntry:
       type: object
@@ -262,6 +241,27 @@ components:
           type: string
         verifiability:
           type: string
+    github_com_0glabs_0g-router_pkg_response.ModelPriceVariant:
+      type: object
+      properties:
+        dimensions:
+          type: object
+          additionalProperties:
+            type: string
+        unit:
+          type: string
+        unit_price:
+          type: string
+    github_com_0glabs_0g-router_pkg_response.ModelListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/github_com_0glabs_0g-router_pkg_response.ModelEntry'
+        object:
+          type: string
+          example: list
   securitySchemes:
     ApiKeyAuth:
       description: 'API key for inference, file upload, and async image endpoints. Format: "Bearer sk-..."'
