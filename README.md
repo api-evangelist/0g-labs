@@ -64,43 +64,131 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-0G Labs builds **0G (Zero Gravity)**, a decentralized AI operating system: an EVM-compatible L1
-(0G Chain, mainnet "Aristotle", chain ID 16661), a decentralized storage network addressed by
-Merkle root hash (0G Storage), a data-availability layer for rollups (0G DA), and a TEE-attested
-GPU marketplace for AI inference (0G Compute).
+0G Labs builds 0G (Zero Gravity), a decentralized AI operating system (deAIOS) that packages four modular layers into one stack: 0G Chain, an EVM-compatible Layer 1 with sub-second finality (mainnet "Aristotle", chain ID 16661); 0G Storage, a decentralized storage network for large AI datasets addressed by Merkle root hash and reachable through an indexer service, Go/TypeScript SDKs and a CLI; 0G DA, a data-availability layer using erasure coding and KZG commitments that OP Stack, Arbitrum Nitro and AVS rollups can settle against; and the 0G Compute Network, a decentralized GPU marketplace where every inference provider runs inside a TEE and attests to the model it serves. The developer-facing API is the 0G Compute Router at router-api.0g.ai — an OpenAI- and Anthropic-compatible gateway in front of the whole provider network, with a published OpenAPI 3.0 covering chat completions, the Anthropic messages shape, image generation and edits (sync and async), audio transcription, video generation, model and provider catalogs, routing preview, account balance and usage, and API-key management. Authentication splits into billable `sk-` API keys for inference and scope-limited `mk-` management keys for account and key administration.
 
-## API surface
+**Areas:** Artificial Intelligence · Inference · LLM · GPU Compute · Decentralized Compute · Blockchain · Web3 · EVM · Decentralized Storage · Data Availability · OpenAI-Compatible · Trusted Execution Environment
 
-| API | Base URL | Contract |
-|---|---|---|
-| 0G Compute Router | `https://router-api.0g.ai/v1` | [OpenAPI 3.0](openapi/0g-labs-router-openapi.yml) — 23 operations, 126 schemas |
-| 0G Chain JSON-RPC | `https://evmrpc.0g.ai` | Ethereum JSON-RPC (EIP-1474) |
-| 0G DA | gRPC | [Disperser](grpc/0g-labs-da-disperser.proto) · [Retriever](grpc/0g-labs-da-retriever.proto) · [Signer](grpc/0g-labs-da-signer.proto) |
-| 0G Storage Indexer | `https://indexer-storage-turbo.0g.ai` | Go/TS SDKs + `0g-storage-client` CLI |
+## 0G Labs on APIs.io
 
-The Router is OpenAI- and Anthropic-wire-compatible: change `base_url` and `api_key` and an
-existing OpenAI client works. `GET /v1/models`, `/v1/providers` and `/v1/service-types` answer
-anonymously, so the live catalog, pricing and provider health can be read with no credential.
+Everything profiled for 0G Labs is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/0g-labs/](https://apis.io/providers/0g-labs/)** — or go straight to one of the APIs or properties below.
 
-## Notable findings
+### APIs (9)
 
-- **The OpenAPI is not where you would look for it.** `router-api.0g.ai/openapi.json`,
-  `docs.0g.ai/openapi.json` and `0g.ai/openapi.json` all return 404. The real 183KB spec is
-  published on GitHub Pages at `https://0gfoundation.github.io/0g-router/openapi.yaml`, linked
-  only from the Router authentication docs page.
-- **The changelog lives inside the OpenAPI.** `docs.0g.ai/changelog` is a 404; release notes are
-  a `## Changelog` section of `info.description`.
-- **0G ships Agent Skills, not MCP.** 14 provider-authored `SKILL.md` files plus an `AGENTS.md`
-  orchestration guide — harvested verbatim into [`skills/`](skills/_index.yml). No first-party
-  MCP server exists.
-- **The skills don't cover the Router.** All 14 target the wallet-signed Direct SDK path, not the
-  gateway 0G's own docs call "recommended for most applications" — see
-  [`mcp/0g-labs-tool-crosswalk.yml`](mcp/0g-labs-tool-crosswalk.yml).
-- **`llms.txt` links 404.** Every entry in `docs.0g.ai/llms.txt` carries a `/docs/` path prefix
-  that returns 404; the same page without it returns 200.
-- **No operationIds.** None of the 23 operations declares one; proposals are recorded in
-  [`overlays/`](overlays/0g-labs-router-overlay.yaml) rather than edited into the harvested spec.
-- **No `/.well-known/` surface, no A2A agent card, no security.txt, no published certifications.**
+- [0G Chain JSON-RPC](https://apis.io/apis/0g-labs/0g-chain-json-rpc/) — Ethereum-compatible JSON-RPC endpoint for the 0G Chain mainnet ("Aristotle", chain ID 16661), an AI-focused Layer 1 with sub-second finality. Standard EVM…
+- [0G DA (Data Availability) gRPC](https://apis.io/apis/0g-labs/0g-da-data-availability-grpc/) — gRPC surface for the 0G data-availability layer. The Disperser service accepts blobs asynchronously (DisperseBlob), exposes polling for processing state…
+- [0G Storage Indexer](https://apis.io/apis/0g-labs/0g-storage-indexer/) — Indexer service for the 0G Storage network. It locates the storage nodes holding a file's segments, brokers uploads and downloads addressed by Merkle root…
+- [0G Labs Account API](https://apis.io/apis/0g-labs/0g-labs-account-api/) — The Account API from 0G Labs — 5 operation(s) for account.
+- [0G Labs API Key API](https://apis.io/apis/0g-labs/0g-labs-api-key-api/) — The API Key API from 0G Labs — 2 operation(s) for api key.
+- [0G Labs Inference API](https://apis.io/apis/0g-labs/0g-labs-inference-api/) — The Inference API from 0G Labs — 11 operation(s) for inference.
+- [0G Labs Models API](https://apis.io/apis/0g-labs/0g-labs-models-api/) — The Models API from 0G Labs — 1 operation(s) for models.
+- [0G Labs Provider API](https://apis.io/apis/0g-labs/0g-labs-provider-api/) — The Provider API from 0G Labs — 1 operation(s) for provider.
+- [0G Labs Service Types API](https://apis.io/apis/0g-labs/0g-labs-service-types-api/) — The Service Types API from 0G Labs — 1 operation(s) for service types.
 
-Sources: <https://0g.ai> · <https://docs.0g.ai> · <https://0gfoundation.github.io/0g-router/> ·
-<https://github.com/0gfoundation>
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [0g-router](https://apis.io/servers/0g-labs/0g-router/)
+
+#### Collections (6)
+
+Postman and Open Collection request collections.
+
+- [0G Router Account API](https://apis.io/collections/0g-labs/open-0g-labs-account-api/)
+- [0G Router API Key API](https://apis.io/collections/0g-labs/open-0g-labs-api-key-api/)
+- [0G Router Inference API](https://apis.io/collections/0g-labs/open-0g-labs-inference-api/)
+- [0G Router Models API](https://apis.io/collections/0g-labs/open-0g-labs-models-api/)
+- [0G Router Provider API](https://apis.io/collections/0g-labs/open-0g-labs-provider-api/)
+- [0G Router Service Types API](https://apis.io/collections/0g-labs/open-0g-labs-service-types-api/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [0G Labs Router Overlay](https://apis.io/overlays/0g-labs/0g-labs-router-overlay/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [0G Labs Authentication](https://apis.io/security/0g-labs/0g-labs-authentication/)
+- [0G Labs Domain Security](https://apis.io/security/0g-labs/0g-labs-domain-security/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [0G Labs Rate Limits](https://apis.io/rate-limits/0g-labs/0g-labs-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://0g.ai)
+- [Documentation](https://docs.0g.ai)
+- [Getting started](https://docs.0g.ai/developer-hub/getting-started)
+- [API reference](https://0gfoundation.github.io/0g-router/)
+- [Sign up](https://pc.0g.ai)
+- [Support](https://discord.gg/0glabs)
+- [Blog](https://0g.ai/blog)
+- [Terms of service](https://0g.ai/terms-of-service)
+- [Privacy policy](https://0g.ai/privacy-policy)
+- [GitHub](https://github.com/0gfoundation)
+- [Status](https://status.0g.ai)
+
+## API Evangelist rating
+
+**Kin Score 48.8** — developing · rubric 0.24.0 · scored 2026-10-17
+
+| Facet | Score |
+|---|---|
+| Discoverability | 64.3 |
+| Contract quality | 47.6 |
+| Contract governance | 4.5 |
+| Operational transparency | 42.1 |
+| Developer ergonomics | 85.7 |
+| Access clarity | 34.2 |
+
+**Agent readiness 30.6** — agent-ready
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | — |
+| Reversibility Documented | — |
+| MCP Server | — |
+| Auth Clarity | bearer (partial credit) |
+| Idempotency | documented (partial credit) |
+| Error Semantics | verified |
+| OpenAPI Examples | — |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | yes |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | — |
+| Protected Resource Metadata | — |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+
+**Regulatory alignment 22.7** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/0g-labs/](https://apis.io/providers/0g-labs/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for 0G Labs: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/0g-labs/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
